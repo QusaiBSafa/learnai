@@ -1,0 +1,419 @@
+{
+  "slug": "rag",
+  "title": "RAG: Retrieval-Augmented Generation",
+  "short": "RAG",
+  "level": "Intermediate",
+  "blurb": "Let a model answer from your own documents: embeddings, vector databases, chunking, reranking and evaluation.",
+  "stage": "build-with-llms",
+  "order": 7,
+  "lessons": [
+    {
+      "slug": "why-rag",
+      "title": "Why RAG?",
+      "summary": "Knowledge cutoffs, private data, and the retrieve, augment, generate flow.",
+      "resources": [
+        {
+          "title": "Pinecone: Retrieval-Augmented Generation",
+          "url": "https://www.pinecone.io/learn/retrieval-augmented-generation/",
+          "type": "article",
+          "minutes": 12
+        },
+        {
+          "title": "LlamaIndex: Introduction to RAG",
+          "url": "https://developers.llamaindex.ai/python/framework/understanding/rag/",
+          "type": "docs",
+          "minutes": 8
+        }
+      ],
+      "minutes": 15,
+      "body": [
+        "A language model only knows what was in its training data. That data stops at a **knowledge cutoff** date, and it never included your company wiki, your PDFs or yesterday's emails. Ask about those and the model either says it doesn't know or, worse, makes up a confident answer.",
+        "**Retrieval-Augmented Generation (RAG)** fixes this without retraining the model. Think of an open-book exam: instead of hoping the student memorized everything, you let them look up the right page first and then answer.",
+        "RAG has three steps. **Retrieve**: search your documents for the pieces most related to the question. **Augment**: paste those pieces into the prompt as context. **Generate**: the model writes an answer using that context.",
+        "Because the answer is grounded in real text, you can show sources, update knowledge just by editing documents, and keep private data out of training. The quality of the whole system depends heavily on step one: if retrieval finds the wrong text, the model answers from the wrong text."
+      ],
+      "keyIdeas": [
+        "Models don't know your private data or anything after their cutoff",
+        "RAG = retrieve relevant text, add it to the prompt, then generate",
+        "Updating knowledge means editing documents, not retraining",
+        "Good answers depend on good retrieval"
+      ],
+      "quiz": [
+        {
+          "q": "What does the 'augment' step in RAG do?",
+          "options": [
+            "Adds the retrieved text into the prompt",
+            "Retrains the model on your documents",
+            "Makes the model's answer longer",
+            "Translates the question into vectors"
+          ],
+          "answer": 0,
+          "explain": "Augmenting means putting the retrieved passages into the prompt so the model can use them."
+        },
+        {
+          "q": "Your docs change every week. Why is RAG a good fit?",
+          "options": [
+            "RAG makes the model bigger each week",
+            "You only edit the documents; no retraining needed",
+            "RAG removes the need for a language model"
+          ],
+          "answer": 1,
+          "explain": "RAG looks up the current documents at question time, so fresh content is used immediately."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "toy_rag.py",
+        "source": "# A toy RAG loop: retrieve -> augment -> generate\ndocs = [\n    \"Our office opens at 9am and closes at 5pm on weekdays.\",\n    \"Refunds are accepted within 30 days with a receipt.\",\n    \"The Wi-Fi password for guests is sunflower42.\",\n]\n\ndef retrieve(question, docs, k=1):\n    # Score each doc by how many words it shares with the question\n    q_words = set(question.lower().replace(\"?\", \"\").split())\n    scored = [(len(q_words & set(d.lower().split())), d) for d in docs]\n    scored.sort(reverse=True)\n    return [d for score, d in scored[:k]]\n\ndef fake_llm(prompt):\n    # Stand-in for a real model: it can only \"know\" what is in the prompt\n    if \"Context:\" in prompt:\n        context = prompt.split(\"Context:\")[1].split(\"Question:\")[0].strip()\n        return \"Based on our documents: \" + context\n    return \"Sorry, I don't know that. It's not in my training data.\"\n\nquestion = \"What is the guest Wi-Fi password?\"\n\n# 1) Without RAG: the model has never seen your private documents\nprint(\"No RAG :\", fake_llm(\"Question: \" + question))\n\n# 2) With RAG: find the relevant text and paste it into the prompt\ncontext = retrieve(question, docs)[0]\nprompt = f\"Context:\\n{context}\\n\\nQuestion: {question}\"\nprint(\"Prompt sent to the model:\\n\" + prompt)\nprint(\"With RAG:\", fake_llm(prompt))\n",
+        "runnable": true,
+        "note": "A word-overlap search and a fake model, just to show the three steps."
+      }
+    },
+    {
+      "slug": "embeddings-and-similarity",
+      "title": "Embeddings and similarity",
+      "summary": "Turn text into vectors and compare meaning with cosine similarity.",
+      "resources": [
+        {
+          "title": "Pinecone: What are Vector Embeddings",
+          "url": "https://www.pinecone.io/learn/vector-embeddings/",
+          "type": "article",
+          "minutes": 12
+        }
+      ],
+      "minutes": 20,
+      "body": [
+        "Computers can't compare meaning directly, so we turn text into a list of numbers called an **embedding** (a vector). An embedding model is trained so that texts with similar meaning get similar numbers, even when they share no words, like \"car\" and \"automobile\".",
+        "Picture every piece of text as a point on a huge map. Texts about cats cluster in one area, texts about tax forms in another. Real embedding models use hundreds or thousands of dimensions, but the idea is the same as a 2D map.",
+        "To measure how close two embeddings are, RAG systems usually use **cosine similarity**: it compares the direction of two vectors. A score near 1 means very similar meaning, near 0 means unrelated. It ignores length, so a short and a long text about the same thing can still score high.",
+        "In RAG you embed every chunk of your documents once, store the vectors, then embed each question and find the chunks with the highest similarity. Always use the same embedding model for the documents and the questions, or the numbers won't be comparable."
+      ],
+      "keyIdeas": [
+        "An embedding is a list of numbers that captures meaning",
+        "Similar meanings land close together, even with different words",
+        "Cosine similarity compares direction: near 1 = similar, near 0 = unrelated",
+        "Embed documents and questions with the same model"
+      ],
+      "quiz": [
+        {
+          "q": "Which pair should have the highest cosine similarity?",
+          "options": [
+            "\"happy\" and \"joyful\"",
+            "\"dog\" and \"spreadsheet\"",
+            "\"rain\" and \"keyboard\""
+          ],
+          "answer": 0,
+          "explain": "Embeddings place words with similar meaning close together, and happy and joyful are near-synonyms."
+        },
+        {
+          "q": "Why must questions and documents use the same embedding model?",
+          "options": [
+            "Different models are slower",
+            "It is only a licensing rule",
+            "Different models put meanings in different places, so scores don't compare",
+            "Cosine similarity only works on short text"
+          ],
+          "answer": 2,
+          "explain": "Each model learns its own 'map', so vectors from two different models aren't on the same map."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "cosine.py",
+        "source": "import numpy as np\n\n# Pretend embeddings: 4 numbers per word.\n# Real models use hundreds of dimensions learned from data.\nemb = {\n    \"cat\":    np.array([0.9, 0.8, 0.1, 0.0]),\n    \"kitten\": np.array([0.85, 0.9, 0.15, 0.05]),\n    \"dog\":    np.array([0.8, 0.3, 0.2, 0.1]),\n    \"car\":    np.array([0.05, 0.1, 0.9, 0.8]),\n}\n\ndef cosine(a, b):\n    # Cosine similarity: 1 = same direction, 0 = unrelated\n    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))\n\nquery = \"cat\"\nprint(f\"Similarity to '{query}':\")\nresults = [(w, cosine(emb[query], v)) for w, v in emb.items() if w != query]\nfor word, score in sorted(results, key=lambda x: -x[1]):\n    print(f\"  {word:7s} {score:.3f}\")\n",
+        "runnable": true,
+        "note": "Hand-made 4-number vectors; real embeddings come from a trained model."
+      }
+    },
+    {
+      "slug": "vector-databases",
+      "title": "Vector databases",
+      "summary": "Indexes, nearest-neighbor search and metadata filters.",
+      "resources": [
+        {
+          "title": "Pinecone: What is a Vector Database?",
+          "url": "https://www.pinecone.io/learn/vector-database/",
+          "type": "article",
+          "minutes": 15
+        }
+      ],
+      "minutes": 20,
+      "body": [
+        "Once you have thousands or millions of embeddings, you need somewhere to keep them and a fast way to find the closest ones to a question. That's what a **vector database** does, for example Pinecone, Chroma, Qdrant, Weaviate or pgvector inside Postgres.",
+        "The simplest search compares the question to every stored vector. That's exact but gets slow at scale. So vector databases build an **index** for **approximate nearest neighbor (ANN)** search, such as HNSW, which works like a well-organized library: you walk to the right shelf instead of checking every book. You trade a tiny bit of accuracy for a huge speed-up.",
+        "Each vector is stored with **metadata**: the original text, the source file, a date, a language, who may see it. **Metadata filters** let you say \"only search English documents from 2025\" or \"only documents this user is allowed to read\".",
+        "For learning or small projects you don't need a big service; a few thousand vectors fit fine in memory with NumPy or a local library like Chroma. Reach for a dedicated database when your data grows or you need filtering, updates and scale."
+      ],
+      "keyIdeas": [
+        "A vector database stores embeddings and finds the nearest ones fast",
+        "ANN indexes like HNSW trade a little accuracy for big speed",
+        "Metadata filters narrow results by source, date, language or permission",
+        "Small projects can start with NumPy or a local library"
+      ],
+      "quiz": [
+        {
+          "q": "What is the main benefit of an approximate nearest neighbor index?",
+          "options": [
+            "It makes search much faster on large collections",
+            "It gives perfectly exact results",
+            "It creates embeddings for you",
+            "It removes the need for metadata"
+          ],
+          "answer": 0,
+          "explain": "ANN indexes skip most comparisons, making search fast at scale with only a small accuracy cost."
+        },
+        {
+          "q": "You only want results from documents a user is allowed to see. What do you use?",
+          "options": [
+            "A bigger embedding model",
+            "A metadata filter",
+            "Cosine similarity"
+          ],
+          "answer": 1,
+          "explain": "Storing permissions as metadata and filtering on them restricts which vectors can be returned."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "tiny_vector_db.py",
+        "source": "import numpy as np\n\nclass TinyVectorDB:\n    \"\"\"A toy vector database: store vectors + metadata, search by similarity.\"\"\"\n    def __init__(self):\n        self.vectors, self.items = [], []\n\n    def add(self, vector, text, **metadata):\n        v = np.array(vector, dtype=float)\n        self.vectors.append(v / np.linalg.norm(v))  # normalize once at insert\n        self.items.append({\"text\": text, **metadata})\n\n    def search(self, query, k=2, where=None):\n        q = np.array(query, dtype=float)\n        q = q / np.linalg.norm(q)\n        scores = np.array(self.vectors) @ q  # dot product = cosine here\n        results = []\n        for i in np.argsort(-scores):        # best first (brute force)\n            item = self.items[i]\n            if where and any(item.get(k2) != v for k2, v in where.items()):\n                continue                     # metadata filter\n            results.append((round(float(scores[i]), 3), item[\"text\"]))\n            if len(results) == k:\n                break\n        return results\n\ndb = TinyVectorDB()\ndb.add([0.9, 0.1, 0.0], \"How to reset your password\", lang=\"en\")\ndb.add([0.8, 0.3, 0.1], \"Cómo restablecer tu contraseña\", lang=\"es\")\ndb.add([0.1, 0.9, 0.2], \"Our shipping rates\", lang=\"en\")\ndb.add([0.0, 0.2, 0.9], \"Holiday opening hours\", lang=\"en\")\n\nquery = [0.85, 0.15, 0.05]  # pretend embedding of \"forgot my password\"\nprint(\"Top 2, any language:\", db.search(query))\nprint(\"Top 2, English only:\", db.search(query, where={\"lang\": \"en\"}))\n",
+        "runnable": true,
+        "note": "Brute-force search; real databases add an ANN index for speed."
+      }
+    },
+    {
+      "slug": "chunking",
+      "title": "Chunking",
+      "summary": "Fixed, recursive and semantic chunking, and picking a chunk size.",
+      "resources": [
+        {
+          "title": "Pinecone: Chunking Strategies",
+          "url": "https://www.pinecone.io/learn/chunking-strategies/",
+          "type": "article",
+          "minutes": 15
+        }
+      ],
+      "minutes": 20,
+      "body": [
+        "You can't embed a whole 200-page manual as one vector: the meaning gets blurred and it may not even fit. So you cut documents into smaller pieces called **chunks**, embed each one, and retrieve only the chunks that matter.",
+        "**Fixed-size chunking** cuts every N characters or tokens. It's simple, but it can slice a sentence in half. Adding an **overlap** (each chunk repeats the end of the previous one) helps keep boundary sentences intact.",
+        "**Recursive chunking** tries natural breaks first: paragraphs, then sentences, then words, only cutting smaller when a piece is still too big. **Semantic chunking** goes further and starts a new chunk where the topic changes, using embeddings to spot the shift.",
+        "Chunk size is a balancing act, like cutting a pizza. Tiny slices are precise but lose context; huge slices keep context but mix topics and waste prompt space. A few hundred tokens with some overlap is a common starting point, but test it on your own questions."
+      ],
+      "keyIdeas": [
+        "Chunks are the pieces of documents you embed and retrieve",
+        "Fixed-size is simple; overlap protects sentences at boundaries",
+        "Recursive chunking respects paragraphs and sentences",
+        "Pick chunk size by testing, not guessing"
+      ],
+      "quiz": [
+        {
+          "q": "Why add overlap between fixed-size chunks?",
+          "options": [
+            "To make the index smaller",
+            "To speed up the embedding model",
+            "Because the database requires it",
+            "So sentences on a boundary aren't lost"
+          ],
+          "answer": 3,
+          "explain": "Overlap repeats text across neighbors, so an idea split at a cut still appears whole in one chunk."
+        },
+        {
+          "q": "What is a downside of very large chunks?",
+          "options": [
+            "They lose all context",
+            "They can't be embedded at all",
+            "They can mix several topics and waste prompt space"
+          ],
+          "answer": 2,
+          "explain": "Big chunks dilute the meaning of the vector and fill the prompt with irrelevant text."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "chunking.py",
+        "source": "text = (\"RAG systems split documents into chunks. Each chunk is embedded separately. \"\n        \"Small chunks are precise but can lose context.\\n\\n\"\n        \"Large chunks keep context but may mix several topics. \"\n        \"Overlap between chunks helps keep sentences that sit on a boundary.\")\n\ndef fixed_chunks(text, size=60, overlap=15):\n    # Cut every `size` characters; each chunk repeats the last `overlap` chars\n    step = size - overlap\n    return [text[i:i + size] for i in range(0, len(text), step)]\n\ndef recursive_chunks(text, max_len=120):\n    # Try big separators first (paragraphs), then sentences, keep pieces whole\n    chunks = []\n    for para in text.split(\"\\n\\n\"):\n        if len(para) <= max_len:\n            chunks.append(para)\n            continue\n        current = \"\"\n        for sentence in para.split(\". \"):\n            piece = sentence if sentence.endswith(\".\") else sentence + \".\"\n            if current and len(current) + len(piece) + 1 > max_len:\n                chunks.append(current)\n                current = piece\n            else:\n                current = (current + \" \" + piece).strip()\n        if current:\n            chunks.append(current)\n    return chunks\n\nprint(\"FIXED (notice words cut in half):\")\nfor c in fixed_chunks(text)[:4]:\n    print(\"  |\" + c.replace(\"\\n\", \" \") + \"|\")\nprint(\"\\nRECURSIVE (respects paragraphs and sentences):\")\nfor c in recursive_chunks(text):\n    print(\"  |\" + c + \"|\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "better-retrieval-hybrid-search-and-reranking",
+      "title": "Better retrieval: hybrid search and reranking",
+      "summary": "Keyword plus vector search, rerankers, contextual chunks.",
+      "resources": [
+        {
+          "title": "Pinecone: Rerankers and Two-Stage Retrieval",
+          "url": "https://www.pinecone.io/learn/series/rag/rerankers/",
+          "type": "article",
+          "minutes": 15
+        },
+        {
+          "title": "Anthropic: Introducing Contextual Retrieval",
+          "url": "https://www.anthropic.com/engineering/contextual-retrieval",
+          "type": "article",
+          "minutes": 15
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "Vector search is great at meaning but can miss exact matches like product codes, names or error numbers. Classic **keyword search** (like BM25) is the opposite: precise on exact words, weak on synonyms. **Hybrid search** runs both and merges the results.",
+        "A popular way to merge is **Reciprocal Rank Fusion (RRF)**: each document earns points based on its position in each list, so anything that ranks high in either search rises to the top.",
+        "Then comes **two-stage retrieval**. First, cheaply fetch a broad set of candidates, say the top 50. Second, a **reranker** (a cross-encoder model) reads the question and each candidate together and scores how well they truly match. It's slower, so you only run it on the shortlist, like a recruiter screening CVs before the manager interviews a few.",
+        "**Contextual retrieval** fixes a different problem: a chunk like \"Revenue grew 3%\" means little on its own. Before embedding, you prepend a short sentence explaining where it comes from (which company, which report). Anthropic found that combining contextual chunks, hybrid search and reranking cut retrieval failures substantially."
+      ],
+      "keyIdeas": [
+        "Keyword search nails exact terms; vector search catches meaning",
+        "Hybrid search merges both, often with Reciprocal Rank Fusion",
+        "Rerankers rescore a small shortlist for much better precision",
+        "Adding context to each chunk before embedding improves retrieval"
+      ],
+      "quiz": [
+        {
+          "q": "A user searches for error code 'E42'. Which search is most likely to find it reliably?",
+          "options": [
+            "Keyword search (or hybrid)",
+            "Pure vector search",
+            "A reranker alone"
+          ],
+          "answer": 0,
+          "explain": "Exact rare tokens like codes are matched precisely by keyword search, which hybrid search includes."
+        },
+        {
+          "q": "Why run a reranker only on the top candidates?",
+          "options": [
+            "Rerankers only accept 10 inputs",
+            "Rerankers are slower, so you use them on a shortlist",
+            "Rerankers need metadata filters",
+            "It makes the embeddings smaller"
+          ],
+          "answer": 1,
+          "explain": "Rerankers read query and document together, which is costly, so they refine a small candidate set."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "hybrid_search.py",
+        "source": "from sklearn.feature_extraction.text import TfidfVectorizer\nfrom sklearn.metrics.pairwise import cosine_similarity\ndocs = [\n    \"Code E42: the paper tray is empty, please refill it.\",\n    \"Printing problems? Restart the printer and check the cables.\",\n    \"Printers show error codes on the small screen.\",\n    \"Our cafeteria serves lunch from noon.\",\n]\nquery = \"printer fault E42\"\n\ndef ranking(vectorizer):\n    m = vectorizer.fit_transform(docs + [query])\n    scores = cosine_similarity(m[-1], m[:-1])[0]\n    return sorted(range(len(docs)), key=lambda i: -scores[i])\n\n# \"Keyword\" search: exact whole words, great for codes like E42\nkeyword = ranking(TfidfVectorizer())\n# Stand-in for \"vector\" search: character pieces, so printer ~ printing\nfuzzy = ranking(TfidfVectorizer(analyzer=\"char_wb\", ngram_range=(3, 4)))\n\ndef rrf(*rankings, k=60):\n    # Reciprocal Rank Fusion: reward docs that rank high in ANY list\n    score = {}  # each doc gets 1/(k + its position) from every list\n    for r in rankings:\n        for rank, doc in enumerate(r):\n            score[doc] = score.get(doc, 0) + 1 / (k + rank + 1)\n    return sorted(score, key=lambda d: -score[d])\n\ndef rerank(query, candidates):\n    # Toy reranker: reads query and doc TOGETHER; rare words count more\n    words = query.lower().split()\n    rarity = {w: 1 / max(1, sum(w in d.lower() for d in docs)) for w in words}\n    score = lambda i: sum(rarity[w] for w in words if w in docs[i].lower())\n    return sorted(candidates, key=lambda i: -score(i))\n\nfused = rrf(keyword, fuzzy)\nprint(\"Keyword order:\", keyword)\nprint(\"Fuzzy order:  \", fuzzy)\nprint(\"Fused (RRF):  \", fused)\ntop3 = rerank(query, fused[:3])  # stage 2: rerank only the top few\nprint(\"\\nAfter reranking the top 3:\", *[docs[i] for i in top3], sep=\"\\n  \")\n",
+        "runnable": true,
+        "note": "TF-IDF stands in for BM25 and for embeddings; the reranker is a toy."
+      }
+    },
+    {
+      "slug": "build-a-rag-pipeline",
+      "title": "Build a RAG pipeline",
+      "summary": "End-to-end code: chunk, embed, retrieve, rerank, answer.",
+      "resources": [
+        {
+          "title": "Hugging Face Cookbook: Advanced RAG",
+          "url": "https://huggingface.co/learn/cookbook/advanced_rag",
+          "type": "interactive",
+          "minutes": 40
+        }
+      ],
+      "minutes": 40,
+      "body": [
+        "Now put the pieces together. A RAG pipeline has two phases. **Indexing** happens ahead of time: load documents, chunk them, embed each chunk and store the vectors. **Querying** happens per question: embed the question, retrieve the best chunks, optionally rerank, then build a prompt and call the model.",
+        "The prompt matters. Tell the model to answer **only from the provided context** and to say \"I don't know\" when the answer isn't there. This one instruction greatly reduces made-up answers.",
+        "Keep track of where each chunk came from (file name, page, section). Then the model can cite its sources and users can check them, which builds trust.",
+        "Start simple and get it working end to end before adding extras. Frameworks like LlamaIndex and LangChain wrap these steps, but writing a tiny version yourself, like the one below, makes it much easier to debug the big ones later."
+      ],
+      "keyIdeas": [
+        "Indexing (chunk, embed, store) happens once, ahead of time",
+        "Querying: embed question, retrieve, rerank, prompt, generate",
+        "Tell the model to use only the context and admit when it doesn't know",
+        "Keep sources with chunks so answers can cite them"
+      ],
+      "quiz": [
+        {
+          "q": "Which step happens ahead of time, before any user asks a question?",
+          "options": [
+            "Generating the answer",
+            "Reranking the results",
+            "Building the final prompt",
+            "Chunking and embedding the documents"
+          ],
+          "answer": 3,
+          "explain": "Indexing (chunking, embedding, storing) is done once up front so queries are fast."
+        },
+        {
+          "q": "What prompt instruction best reduces made-up answers?",
+          "options": [
+            "\"Be creative.\"",
+            "\"Answer in one word.\"",
+            "\"Answer only from the context; say you don't know if it isn't there.\""
+          ],
+          "answer": 2,
+          "explain": "Restricting the model to the context and allowing 'I don't know' discourages guessing."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "mini_rag.py",
+        "source": "from sklearn.feature_extraction.text import TfidfVectorizer\nfrom sklearn.metrics.pairwise import cosine_similarity\n\nhandbook = \"\"\"Vacation: Full-time staff get 25 days of paid vacation per year.\nUnused vacation days can carry over, up to 5 days.\n\nRemote work: You may work from home up to 3 days a week.\nAsk your manager before changing your usual schedule.\n\nEquipment: Every new hire gets a laptop and a headset.\nBroken equipment is replaced by the IT desk within 2 days.\"\"\"\n\n# 1) CHUNK: one chunk per paragraph\nchunks = [p.strip() for p in handbook.split(\"\\n\\n\")]\n\n# 2) EMBED: TF-IDF vectors stand in for a real embedding model\nvec = TfidfVectorizer(stop_words=\"english\")\nchunk_vectors = vec.fit_transform(chunks)\n\n# 3) RETRIEVE: most similar chunks for the question\ndef retrieve(question, k=2):\n    scores = cosine_similarity(vec.transform([question]), chunk_vectors)[0]\n    top = scores.argsort()[::-1][:k]\n    return [(round(scores[i], 2), chunks[i]) for i in top]\n\n# 4) AUGMENT: build the prompt a real LLM would receive\ndef build_prompt(question, hits):\n    context = \"\\n---\\n\".join(text for _, text in hits)\n    return (f\"Answer using ONLY the context. If it isn't there, say you don't know.\\n\"\n            f\"Context:\\n{context}\\n\\nQuestion: {question}\")\n\nquestion = \"How many vacation days do I get?\"\nhits = retrieve(question)\nfor score, text in hits:\n    print(f\"[{score}] {text.splitlines()[0]}\")\nprint(\"\\n\" + build_prompt(question, hits))\n# 5) GENERATE: send this prompt to any LLM API (needs a key, so not shown here)\n",
+        "runnable": true,
+        "note": "TF-IDF stands in for an embedding model; send the printed prompt to any LLM to finish."
+      }
+    },
+    {
+      "slug": "evaluate-your-rag",
+      "title": "Evaluate your RAG",
+      "summary": "Test questions, model-graded scoring and comparing setups.",
+      "resources": [
+        {
+          "title": "Hugging Face Cookbook: RAG Evaluation",
+          "url": "https://huggingface.co/learn/cookbook/rag_evaluation",
+          "type": "interactive",
+          "minutes": 40
+        },
+        {
+          "title": "DeepLearning.AI: Building and Evaluating Advanced RAG",
+          "url": "https://www.deeplearning.ai/short-courses/building-evaluating-advanced-rag/",
+          "type": "course",
+          "minutes": 125
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "How do you know if your RAG system is good, or whether a change made it better? You need a **test set**: a list of realistic questions, each with the right answer or the document that should be found. Even 20 to 50 hand-written examples are a strong start.",
+        "Evaluate the two halves separately. For **retrieval**, check whether the right chunk was found: **hit rate@k** asks \"was it in the top k?\" and **MRR** rewards finding it near the top. For **generation**, check whether the answer is correct and **faithful** (supported by the retrieved text, not invented).",
+        "Grading answers by hand is slow, so many teams use **LLM-as-a-judge**: a strong model scores each answer against the reference with a clear rubric. Spot-check the judge's grades yourself, because judges can be wrong too.",
+        "Then experiment like a scientist: change one thing at a time (chunk size, number of results, adding a reranker), rerun the same test set and compare the scores. Without measurement, \"it feels better\" is just a guess."
+      ],
+      "keyIdeas": [
+        "Build a test set of real questions with known answers",
+        "Measure retrieval (hit rate, MRR) and generation (correct, faithful) apart",
+        "LLM-as-a-judge scales grading, but spot-check it",
+        "Change one setting at a time and compare scores"
+      ],
+      "quiz": [
+        {
+          "q": "Hit rate@3 measures...",
+          "options": [
+            "Whether the correct document appears in the top 3 results",
+            "How fast the top 3 results load",
+            "How many words are in the top 3 chunks",
+            "Whether the answer is 3 sentences long"
+          ],
+          "answer": 0,
+          "explain": "Hit rate@k is the share of test questions where the right document is among the top k results."
+        },
+        {
+          "q": "An answer is fluent but includes facts not in the retrieved text. Which quality is it failing?",
+          "options": [
+            "Hit rate",
+            "Faithfulness",
+            "Chunk overlap"
+          ],
+          "answer": 1,
+          "explain": "Faithfulness means every claim is supported by the retrieved context."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "eval_retrieval.py",
+        "source": "from sklearn.feature_extraction.text import TfidfVectorizer\nfrom sklearn.metrics.pairwise import cosine_similarity\n\ndocs = [\n    \"Parking is free for employees in garage B.\",\n    \"Lunch is served in the cafeteria from noon to 2pm.\",\n    \"Expense reports are due on the 5th of each month.\",\n    \"The gym on floor 2 is open 24 hours for staff.\",\n    \"Visitors must sign in at the front desk.\",\n]\n# Test set: a question plus the doc that SHOULD be retrieved\ntests = [\n    (\"Where can I park my car?\", 0),\n    (\"When is lunch?\", 1),\n    (\"Deadline for expenses?\", 2),\n    (\"Can I work out at night?\", 3),\n    (\"What do guests do when they arrive?\", 4),\n]\n\ndef evaluate(vectorizer, k):\n    m = vectorizer.fit_transform(docs)\n    hits, rr = 0, 0.0\n    for q, gold in tests:\n        scores = cosine_similarity(vectorizer.transform([q]), m)[0]\n        ranking = list(scores.argsort()[::-1])\n        rank = ranking.index(gold) + 1\n        hits += rank <= k            # hit rate: was it in the top k?\n        rr += 1 / rank               # MRR: how high was it?\n    return hits / len(tests), rr / len(tests)\n\nsetups = {\n    \"word tf-idf\": TfidfVectorizer(),\n    \"char n-grams\": TfidfVectorizer(analyzer=\"char_wb\", ngram_range=(3, 5)),\n}\nfor name, v in setups.items():\n    for k in (1, 3):\n        hit, mrr = evaluate(v, k)\n        print(f\"{name:13s} k={k}: hit rate {hit:.0%}, MRR {mrr:.2f}\")\n",
+        "runnable": true
+      }
+    }
+  ]
+}

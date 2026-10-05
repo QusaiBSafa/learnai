@@ -1,0 +1,384 @@
+{
+  "slug": "deep-learning",
+  "title": "Deep Learning & Neural Networks",
+  "short": "Deep Learning",
+  "level": "Intermediate",
+  "blurb": "How neural networks learn, from a single neuron to image models, with your first PyTorch training loop.",
+  "stage": "core-ml",
+  "order": 5,
+  "lessons": [
+    {
+      "slug": "what-is-a-neural-network",
+      "title": "What is a neural network?",
+      "summary": "Neurons, layers, weights and activations.",
+      "resources": [
+        {
+          "title": "3Blue1Brown: But what is a neural network?",
+          "url": "https://www.youtube.com/watch?v=aircAruvnKk",
+          "type": "video",
+          "minutes": 18
+        },
+        {
+          "title": "TensorFlow Playground",
+          "url": "https://playground.tensorflow.org/",
+          "type": "interactive",
+          "minutes": 15
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "A **neural network** is a function made of many tiny, simple pieces called **neurons**. Each neuron takes some numbers in, multiplies each by a **weight**, adds them up with a **bias**, and passes the result on.",
+        "Weights say how much each input matters, like the volume knobs on a mixing desk. Learning means turning these knobs until the network gives good answers. A large network can have millions or billions of them.",
+        "After the weighted sum, each neuron applies an **activation function**, such as **ReLU** (keep positive numbers, turn negatives into 0) or **sigmoid** (squash into 0 to 1). Without activations, stacking layers would just give another straight-line model; activations let networks learn curvy, complex patterns.",
+        "Neurons are organized in **layers**: an input layer receives the data, **hidden layers** transform it, and an output layer gives the answer. Each layer builds on the one before, so later layers can detect more abstract features.",
+        "The code builds a tiny network by hand with NumPy and runs one **forward pass**: data flows in, through a hidden layer of 4 neurons, and out as a single number."
+      ],
+      "keyIdeas": [
+        "A neuron computes a weighted sum of its inputs plus a bias.",
+        "Activation functions like ReLU let networks learn non-linear patterns.",
+        "Networks stack layers: input, hidden, output.",
+        "Learning means adjusting weights and biases to give better answers."
+      ],
+      "quiz": [
+        {
+          "q": "What does ReLU do to a negative input?",
+          "options": [
+            "Turns it into 0",
+            "Makes it positive",
+            "Leaves it unchanged",
+            "Squashes it to 0.5"
+          ],
+          "answer": 0,
+          "explain": "ReLU keeps positive values and outputs 0 for anything negative."
+        },
+        {
+          "q": "Why do neural networks need activation functions?",
+          "options": [
+            "To make training data bigger",
+            "To store the labels",
+            "So stacked layers can model non-linear patterns"
+          ],
+          "answer": 2,
+          "explain": "Without them, many layers collapse into one linear function."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "forward_pass.py",
+        "source": "# A tiny neural network forward pass, written by hand\nimport numpy as np\n\ndef relu(z):\n    return np.maximum(0, z)      # activation: keep positives, zero out negatives\n\ndef sigmoid(z):\n    return 1 / (1 + np.exp(-z))  # squashes any number into 0..1\n\nx = np.array([0.8, 0.2, 0.5])    # 3 input features\n\n# Hidden layer: 4 neurons, each has 3 weights + 1 bias\nW1 = np.array([[ 0.2, -0.5,  0.1],\n               [ 0.7,  0.3, -0.2],\n               [-0.4,  0.9,  0.5],\n               [ 0.1,  0.1,  0.8]])\nb1 = np.array([0.0, 0.1, -0.1, 0.2])\n\n# Output layer: 1 neuron with 4 weights + 1 bias\nW2 = np.array([0.6, -0.3, 0.8, 0.5])\nb2 = -0.2\n\nh = relu(W1 @ x + b1)            # weighted sums, then activation\nout = sigmoid(W2 @ h + b2)\nprint(\"Hidden layer outputs:\", h.round(3))\nprint(f\"Network output: {out:.3f}\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "how-networks-learn-gradient-descent",
+      "title": "How networks learn: gradient descent",
+      "summary": "Loss functions and stepping downhill to reduce them.",
+      "resources": [
+        {
+          "title": "3Blue1Brown: Gradient descent",
+          "url": "https://www.youtube.com/watch?v=IHZwWFHWa-w",
+          "type": "video",
+          "minutes": 21
+        },
+        {
+          "title": "Google ML Crash Course: Neural Networks",
+          "url": "https://developers.google.com/machine-learning/crash-course/neural-networks",
+          "type": "course",
+          "minutes": 75
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "To learn, a network first needs a way to measure how wrong it is. That measure is the **loss function**. For predicting numbers, a common choice is mean squared error; for picking categories, it is **cross-entropy**. Lower loss means better predictions.",
+        "Imagine the loss as a landscape of hills and valleys, where each position is one setting of all the weights. Training is the search for a low valley.",
+        "**Gradient descent** gets there one step at a time. The **gradient** points in the direction where the loss rises fastest, so we step the opposite way: `w = w - learning_rate * gradient`. Repeat thousands of times and the loss shrinks.",
+        "The **learning rate** controls step size. Too small and you need forever; too large and you jump over the valley and can fly off to huge losses. In practice, networks use **mini-batches**: each step looks at a small random batch of data, which is faster and works well. This is called stochastic gradient descent (SGD).",
+        "The code runs gradient descent on a simple bowl-shaped loss with three learning rates, so you can see slow, good and exploding behavior side by side."
+      ],
+      "keyIdeas": [
+        "A loss function measures how wrong the network is.",
+        "The gradient points uphill; gradient descent steps the opposite way.",
+        "Update rule: new weight = old weight - learning rate * gradient.",
+        "Mini-batch SGD takes each step using a small random slice of the data."
+      ],
+      "quiz": [
+        {
+          "q": "Why does gradient descent step in the opposite direction of the gradient?",
+          "options": [
+            "The gradient points toward lower loss",
+            "The gradient points toward higher loss",
+            "It is a random choice"
+          ],
+          "answer": 1,
+          "explain": "The gradient points uphill, so moving against it lowers the loss."
+        },
+        {
+          "q": "What usually happens if the learning rate is far too large?",
+          "options": [
+            "Training becomes very slow but stable",
+            "Nothing changes",
+            "The model gets more layers",
+            "The loss can bounce around or blow up"
+          ],
+          "answer": 3,
+          "explain": "Huge steps overshoot the minimum and can make the loss grow instead of shrink."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "downhill.py",
+        "source": "# Walk downhill on a loss curve\ndef loss(w):\n    return (w - 3) ** 2 + 1      # lowest point is at w = 3\n\ndef gradient(w):\n    return 2 * (w - 3)           # slope of the loss at w\n\nfor lr in [0.1, 0.5, 1.1]:       # try three learning rates\n    w = -2.0                     # start far from the answer\n    for step in range(15):\n        w = w - lr * gradient(w) # step opposite to the slope\n    print(f\"learning rate {lr}: w ends at {w:.3f}, loss {loss(w):.3f}\")\n\n# Watch learning rate 0.3 step by step\nw = -2.0\nfor step in range(6):\n    print(f\"step {step}: w={w:.3f}  loss={loss(w):.3f}  slope={gradient(w):.3f}\")\n    w -= 0.3 * gradient(w)\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "backpropagation",
+      "title": "Backpropagation",
+      "summary": "How the error signal flows backward through the network.",
+      "resources": [
+        {
+          "title": "3Blue1Brown: What is backpropagation really doing?",
+          "url": "https://www.youtube.com/watch?v=Ilg3gGewQ5U",
+          "type": "video",
+          "minutes": 13
+        },
+        {
+          "title": "Karpathy: Building micrograd (optional code-along)",
+          "url": "https://www.youtube.com/watch?v=VMj-3S1tku0",
+          "type": "video",
+          "minutes": 145
+        }
+      ],
+      "minutes": 35,
+      "body": [
+        "Gradient descent needs the gradient: how much the loss changes when each weight changes a little. A network can have millions of weights, so we need a fast way to get all of them. That method is **backpropagation**.",
+        "First comes the **forward pass**: data flows through the network and produces a prediction and a loss. Then the **backward pass** sends an error signal from the loss back through the layers, from output to input.",
+        "The key tool is the **chain rule** from calculus. If the loss depends on the output, and the output depends on a hidden neuron, and that neuron depends on a weight, you multiply the effects along the chain. It is like tracing blame through a relay team: how much did each runner contribute to the final time?",
+        "Each layer only needs a local rule for passing the signal backward, and every value is reused, so backprop computes all gradients in roughly the cost of one extra forward pass. Libraries like PyTorch do this automatically, which is called **autograd**.",
+        "In the code, you do backprop by hand on a two-weight network and then check it by nudging each weight and measuring the change in loss. The two answers match."
+      ],
+      "keyIdeas": [
+        "Backprop computes the gradient of the loss for every weight efficiently.",
+        "Forward pass makes a prediction; backward pass sends the error signal back.",
+        "It is the chain rule applied layer by layer, from output to input.",
+        "Frameworks like PyTorch do this for you automatically (autograd)."
+      ],
+      "quiz": [
+        {
+          "q": "In which direction does backpropagation pass the error signal?",
+          "options": [
+            "From the output back toward the input",
+            "From the input toward the output",
+            "Randomly between layers"
+          ],
+          "answer": 0,
+          "explain": "The error starts at the loss and flows backward through the layers."
+        },
+        {
+          "q": "What does backpropagation give you?",
+          "options": [
+            "The gradient of the loss with respect to each weight",
+            "New training data",
+            "The best learning rate",
+            "The number of layers to use"
+          ],
+          "answer": 0,
+          "explain": "Backprop computes gradients; gradient descent then uses them to update the weights."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "backprop_by_hand.py",
+        "source": "# Backprop by hand on a 2-layer network, checked numerically\nimport numpy as np\n\nx, target = 1.5, 0.5\nw1, w2 = 0.8, -0.4\n\ndef forward(w1, w2):\n    h = np.tanh(w1 * x)          # hidden neuron\n    y = w2 * h                   # output neuron\n    return h, y, (y - target) ** 2\n\nh, y, L = forward(w1, w2)\nprint(f\"forward: h={h:.4f} y={y:.4f} loss={L:.4f}\")\n\n# Backward pass: chain rule, from the loss back to each weight\ndL_dy = 2 * (y - target)\ndL_dw2 = dL_dy * h               # y = w2*h  -> dy/dw2 = h\ndL_dh = dL_dy * w2               # error signal flowing back to h\ndL_dw1 = dL_dh * (1 - h**2) * x  # tanh'(z) = 1 - tanh(z)^2, dz/dw1 = x\nprint(f\"backprop:  dL/dw1={dL_dw1:.5f}  dL/dw2={dL_dw2:.5f}\")\n\n# Sanity check: nudge each weight a tiny bit and see how the loss moves\neps = 1e-6\nnum_w1 = (forward(w1 + eps, w2)[2] - forward(w1 - eps, w2)[2]) / (2 * eps)\nnum_w2 = (forward(w1, w2 + eps)[2] - forward(w1, w2 - eps)[2]) / (2 * eps)\nprint(f\"numerical: dL/dw1={num_w1:.5f}  dL/dw2={num_w2:.5f}\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "cnns-for-images",
+      "title": "CNNs for images",
+      "summary": "Convolutions, filters and pooling.",
+      "resources": [
+        {
+          "title": "CNN Explainer (interactive)",
+          "url": "https://poloclub.github.io/cnn-explainer/",
+          "type": "interactive",
+          "minutes": 20
+        },
+        {
+          "title": "StatQuest: Image Classification with CNNs",
+          "url": "https://www.youtube.com/watch?v=HGwBXDKFk9I",
+          "type": "video",
+          "minutes": 16
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "To a computer, an image is a grid of numbers, one per pixel (three per pixel for color). A plain network that connects every pixel to every neuron needs huge numbers of weights and ignores the fact that nearby pixels belong together.",
+        "A **convolutional neural network (CNN)** uses small **filters** (also called kernels), such as a 3x3 grid of weights. The filter slides across the image like a magnifying glass, and at each spot it multiplies and adds the pixels underneath. The result is a **feature map** that lights up wherever the filter's pattern appears.",
+        "One filter might detect vertical edges, another a color blob. The same filter is reused everywhere, so a CNN finds a cat's ear whether it sits in the corner or the center, with far fewer weights.",
+        "**Pooling** shrinks feature maps. **Max pooling** keeps only the strongest value in each small block, which makes the network faster and less sensitive to small shifts. Stacking convolution and pooling layers lets early layers find edges and later layers find shapes, then whole objects.",
+        "The filters are not designed by hand: they are learned by backpropagation. In the code, though, you use a hand-made edge filter to see exactly what a convolution computes."
+      ],
+      "keyIdeas": [
+        "Images are grids of numbers; CNNs exploit that nearby pixels relate.",
+        "A filter slides over the image and produces a feature map.",
+        "Max pooling shrinks maps by keeping the strongest values.",
+        "Early layers find edges; deeper layers find shapes and objects."
+      ],
+      "quiz": [
+        {
+          "q": "What does a convolution filter do?",
+          "options": [
+            "Slides over the image, multiplying and summing pixel values",
+            "Randomly deletes pixels",
+            "Converts the image to text",
+            "Sorts the pixels by brightness"
+          ],
+          "answer": 0,
+          "explain": "A filter computes a weighted sum at every position, producing a feature map."
+        },
+        {
+          "q": "What does 2x2 max pooling keep from each 2x2 block?",
+          "options": [
+            "The average value",
+            "The smallest value",
+            "The largest value"
+          ],
+          "answer": 2,
+          "explain": "Max pooling keeps the strongest response in each block."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "convolution.py",
+        "source": "# Slide a 3x3 filter over a tiny image, then max-pool\nimport numpy as np\n\n# 6x6 \"image\": dark on the left, bright on the right\nimg = np.array([[0, 0, 0, 9, 9, 9]] * 6, dtype=float)\n\n# Vertical edge detector filter\nkernel = np.array([[-1, 0, 1],\n                   [-1, 0, 1],\n                   [-1, 0, 1]], dtype=float)\n\nout = np.zeros((4, 4))\nfor i in range(4):\n    for j in range(4):\n        patch = img[i:i+3, j:j+3]\n        out[i, j] = (patch * kernel).sum()   # multiply and add up\nprint(\"Feature map (big numbers = edge found):\")\nprint(out)\n\n# 2x2 max pooling: keep the strongest value in each block\npooled = out.reshape(2, 2, 2, 2).max(axis=(1, 3))\nprint(\"After 2x2 max pooling:\")\nprint(pooled)\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "pytorch-basics",
+      "title": "PyTorch basics",
+      "summary": "Tensors, a model, and the training loop on FashionMNIST.",
+      "resources": [
+        {
+          "title": "PyTorch: Quickstart",
+          "url": "https://docs.pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html",
+          "type": "docs",
+          "minutes": 20
+        },
+        {
+          "title": "PyTorch: Learn the Basics",
+          "url": "https://docs.pytorch.org/tutorials/beginner/basics/intro.html",
+          "type": "docs",
+          "minutes": 90
+        }
+      ],
+      "minutes": 40,
+      "body": [
+        "**PyTorch** is one of the most popular libraries for building neural networks. Its core object is the **tensor**: a multi-dimensional array, like a NumPy array, that can also run on a GPU and track gradients automatically.",
+        "You describe a model by stacking layers, for example `nn.Linear` (a fully connected layer) and `nn.ReLU` (an activation). `nn.Sequential` chains them like train cars. FashionMNIST is a classic starter dataset: 28x28 grayscale pictures of clothes in 10 classes.",
+        "Training follows the same five-step loop, again and again: run the **forward pass**, compute the **loss**, clear old gradients with `optimizer.zero_grad()`, run **backprop** with `loss.backward()`, and update the weights with `optimizer.step()`.",
+        "A `DataLoader` feeds the data in small shuffled batches, and one full pass over the dataset is an **epoch**. Once you know this loop, you can read most PyTorch training code in the wild.",
+        "PyTorch cannot run in this browser, so the code below is for Google Colab or your computer. It trains a small network on FashionMNIST in about a minute on a CPU."
+      ],
+      "keyIdeas": [
+        "Tensors are PyTorch's arrays; they can run on GPUs and track gradients.",
+        "Build models by stacking layers like nn.Linear and nn.ReLU.",
+        "Training loop: forward, loss, zero_grad, backward, step.",
+        "A DataLoader serves mini-batches; one full pass is an epoch."
+      ],
+      "quiz": [
+        {
+          "q": "Which call computes the gradients in PyTorch?",
+          "options": [
+            "optimizer.step()",
+            "loss.backward()",
+            "model(X)",
+            "optimizer.zero_grad()"
+          ],
+          "answer": 1,
+          "explain": "loss.backward() runs backpropagation and stores a gradient for each weight."
+        },
+        {
+          "q": "What is an epoch?",
+          "options": [
+            "One full pass over the training data",
+            "One mini-batch",
+            "One layer of the network"
+          ],
+          "answer": 0,
+          "explain": "An epoch means the model has seen every training example once."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "train_fashion.py",
+        "source": "import torch\nfrom torch import nn\nfrom torch.utils.data import DataLoader\nfrom torchvision import datasets\nfrom torchvision.transforms import ToTensor\n\ntrain = datasets.FashionMNIST(\"data\", train=True, download=True, transform=ToTensor())\nloader = DataLoader(train, batch_size=64, shuffle=True)\n\nmodel = nn.Sequential(\n    nn.Flatten(),                 # 28x28 image -> 784 numbers\n    nn.Linear(784, 128), nn.ReLU(),\n    nn.Linear(128, 10),           # 10 clothing classes\n)\nloss_fn = nn.CrossEntropyLoss()\noptimizer = torch.optim.SGD(model.parameters(), lr=0.1)\n\nfor epoch in range(3):\n    for X, y in loader:\n        pred = model(X)              # 1. forward pass\n        loss = loss_fn(pred, y)      # 2. measure the error\n        optimizer.zero_grad()        # 3. clear old gradients\n        loss.backward()              # 4. backpropagation\n        optimizer.step()             # 5. update the weights\n    print(f\"epoch {epoch + 1}: last batch loss {loss.item():.3f}\")\n",
+        "runnable": false,
+        "note": "Needs PyTorch and a dataset download, so run it in Google Colab or on your computer."
+      }
+    },
+    {
+      "slug": "next-step-practical-deep-learning",
+      "title": "Next step: practical deep learning",
+      "summary": "Train real models fast with a project-first approach.",
+      "resources": [
+        {
+          "title": "fast.ai: Practical Deep Learning, Lesson 1",
+          "url": "https://course.fast.ai/Lessons/lesson1.html",
+          "type": "course",
+          "minutes": 90
+        },
+        {
+          "title": "Kaggle Learn: Intro to Deep Learning",
+          "url": "https://www.kaggle.com/learn/intro-to-deep-learning",
+          "type": "course",
+          "minutes": 240
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "You now know the pieces: neurons, loss, gradient descent, backprop, CNNs and the PyTorch training loop. The practical next step is to train real models on your own problems, and the fastest way to learn is to build things first and dig into theory as you need it.",
+        "The biggest shortcut in practice is **transfer learning**. Instead of training from scratch, you start from a **pretrained** model that already learned general features (edges, textures, shapes) from millions of images, and train it a little more on your own small dataset. This is called **fine-tuning**.",
+        "It is like hiring an experienced chef for your new restaurant: you only have to teach them your menu, not how to cook. With transfer learning, a few hundred labeled images can be enough for a good classifier.",
+        "Good habits matter as much as models: always keep a validation set, start with a small quick experiment, look at the examples your model gets wrong, and only then scale up. Free tools like Kaggle and Google Colab give you GPUs to practice on.",
+        "The code shows the idea in miniature: features learned from one part of a dataset are reused, and a small model on top reaches good accuracy with only 50 labeled examples."
+      ],
+      "keyIdeas": [
+        "Learn by building real projects, then deepen the theory as needed.",
+        "Transfer learning reuses a pretrained model instead of starting from zero.",
+        "Fine-tuning on a small dataset can give strong results quickly.",
+        "Validate, start small, and study your model's mistakes."
+      ],
+      "quiz": [
+        {
+          "q": "What is transfer learning?",
+          "options": [
+            "Moving a model from one computer to another",
+            "Training without any labels",
+            "Starting from a model already trained on other data and adapting it"
+          ],
+          "answer": 2,
+          "explain": "Transfer learning reuses what a pretrained model learned, then adapts it to your task."
+        },
+        {
+          "q": "Why is fine-tuning popular when you have little data?",
+          "options": [
+            "It needs no data at all",
+            "It removes the need for a validation set",
+            "The model already knows general features, so it needs fewer examples",
+            "It always reaches 100% accuracy"
+          ],
+          "answer": 2,
+          "explain": "The pretrained features do most of the work, so a small dataset is enough to adapt them."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "transfer_mini.py",
+        "source": "# Transfer learning in miniature: reuse features, train only a small \"head\"\nimport numpy as np\nfrom sklearn.datasets import load_digits\nfrom sklearn.decomposition import PCA\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.model_selection import train_test_split\n\nX, y = load_digits(return_X_y=True)\n# Pretend digits 0-4 are a big \"pretraining\" dataset we already have\nbig = y < 5\nfeature_maker = PCA(n_components=20, random_state=0).fit(X[big])\n\n# Our real task: digits 5-9, and we only have 50 labeled examples\nsmall_X, small_y = X[~big], y[~big]\nXtr, Xte, ytr, yte = train_test_split(small_X, small_y, train_size=50,\n                                      random_state=0, stratify=small_y)\n\n# Train a small head on top of the reused features\nhead = LogisticRegression(max_iter=2000)\nhead.fit(feature_maker.transform(Xtr), ytr)\nacc = head.score(feature_maker.transform(Xte), yte)\nprint(f\"Trained on only {len(Xtr)} examples, test accuracy: {acc:.2f}\")\nprint(\"Reusing what a model already learned is the core trick of practical DL.\")\n",
+        "runnable": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "slug": "foundations",
+    "title": "Foundations",
+    "order": 1
+  },
+  {
+    "slug": "core-ml",
+    "title": "Core ML",
+    "order": 2
+  },
+  {
+    "slug": "build-with-llms",
+    "title": "Build with LLMs",
+    "order": 3
+  },
+  {
+    "slug": "ship-it-safely",
+    "title": "Ship it safely",
+    "order": 4
+  }
+]

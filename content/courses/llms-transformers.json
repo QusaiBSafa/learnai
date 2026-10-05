@@ -1,0 +1,434 @@
+{
+  "slug": "llms-transformers",
+  "title": "LLMs & Transformers",
+  "short": "LLMs",
+  "level": "Intermediate",
+  "blurb": "Tokens, embeddings and attention: what really happens inside a language model, and how to run open models.",
+  "stage": "build-with-llms",
+  "order": 6,
+  "lessons": [
+    {
+      "slug": "what-is-an-llm",
+      "title": "What is an LLM?",
+      "summary": "Next-token prediction, training stages, what LLMs can and can't do.",
+      "resources": [
+        {
+          "title": "3Blue1Brown: Large Language Models explained briefly",
+          "url": "https://www.youtube.com/watch?v=LPZh9BOjkQs",
+          "type": "video",
+          "minutes": 8
+        },
+        {
+          "title": "Karpathy: Intro to Large Language Models",
+          "url": "https://www.youtube.com/watch?v=zjkBMFhNj_g",
+          "type": "video",
+          "minutes": 60
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "A **large language model (LLM)** is a neural network trained to do one thing very well: given some text, predict the **next token** (a word or piece of a word). That simple goal, practiced on a huge amount of text, turns out to teach grammar, facts and some reasoning.",
+        "To write a reply, the model predicts a probability for every possible next token, picks one, adds it to the text, and repeats. It is like a supercharged phone keyboard autocomplete, run one token at a time.",
+        "Chat assistants are built in stages. **Pretraining** reads a massive amount of internet text and books to learn language in general. **Fine-tuning** on example conversations, plus feedback from people (often called RLHF), turns that raw text predictor into a helpful assistant.",
+        "LLMs are great at writing, summarizing, translating, explaining and coding. But they can **hallucinate**: produce fluent, confident text that is false, because they generate what sounds likely rather than checking facts. Their knowledge also stops at a training cutoff date, so always verify important claims.",
+        "The code builds the world's tiniest language model: it counts which word follows which, then generates text by sampling one next word at a time."
+      ],
+      "keyIdeas": [
+        "An LLM predicts the next token, over and over, to generate text.",
+        "Pretraining learns language; fine-tuning makes it a helpful assistant.",
+        "LLMs can hallucinate confident but false answers, so verify facts.",
+        "Their knowledge stops at a training cutoff date."
+      ],
+      "quiz": [
+        {
+          "q": "What is an LLM fundamentally trained to do?",
+          "options": [
+            "Predict the next token",
+            "Look up answers in a database",
+            "Translate only between two languages",
+            "Search the web"
+          ],
+          "answer": 0,
+          "explain": "LLMs learn by predicting the next token in huge amounts of text."
+        },
+        {
+          "q": "Why can an LLM state something false with confidence?",
+          "options": [
+            "It generates likely-sounding text rather than checking facts",
+            "It is always connected to the internet",
+            "It deliberately lies"
+          ],
+          "answer": 0,
+          "explain": "The model produces plausible continuations, which are not guaranteed to be true."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "tiny_lm.py",
+        "source": "# A tiny \"language model\": predict the next word from counts\nimport random\nfrom collections import Counter, defaultdict\n\ntext = (\"the cat sat on the mat . the dog sat on the rug . \"\n        \"the cat ate the fish . the dog ate the bone .\")\nwords = text.split()\n\n# \"Training\": count which word follows which\nnext_counts = defaultdict(Counter)\nfor a, b in zip(words, words[1:]):\n    next_counts[a][b] += 1\n\n# Probabilities for the word after \"the\"\nc = next_counts[\"the\"]\ntotal = sum(c.values())\nprint(\"After 'the':\", {w: round(n / total, 2) for w, n in c.items()})\n\n# \"Generation\": repeatedly sample a next word and append it\nrandom.seed(1)\nout = [\"the\"]\nfor _ in range(8):\n    options = next_counts[out[-1]]\n    out.append(random.choices(list(options), weights=options.values())[0])\nprint(\"Generated:\", \" \".join(out))\n# Real LLMs do the same loop, but use a huge neural network and long context.\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "tokens-and-tokenization",
+      "title": "Tokens and tokenization",
+      "summary": "How text becomes token IDs, and why token counts matter.",
+      "resources": [
+        {
+          "title": "Tiktokenizer (try it live)",
+          "url": "https://tiktokenizer.vercel.app/",
+          "type": "interactive",
+          "minutes": 5
+        },
+        {
+          "title": "Hugging Face: Tokenizers",
+          "url": "https://huggingface.co/learn/llm-course/chapter2/4",
+          "type": "course",
+          "minutes": 15
+        }
+      ],
+      "minutes": 20,
+      "body": [
+        "LLMs do not read letters or whole words. They read **tokens**: chunks of text that are often a whole common word, a piece of a longer word, or a punctuation mark. A **tokenizer** splits text into tokens and turns each one into an ID number from a fixed vocabulary.",
+        "Most modern tokenizers use **byte pair encoding (BPE)**. It starts from single characters and repeatedly merges the most frequent pair into a new token. Common words end up as one token, while rare words are built from several pieces, like LEGO bricks.",
+        "As a rough rule of thumb, one token is about 4 characters of English, or about three quarters of a word. Other languages, code and unusual words often need more tokens for the same amount of text.",
+        "Token counts matter in practice. API prices are charged per token, every model has a **context window** (the maximum number of tokens it can handle at once), and long outputs take longer to generate. Tokens also explain some odd mistakes, like miscounting letters in a word, because the model sees chunks, not letters.",
+        "The code trains a toy BPE tokenizer on six words. Watch it learn merges like `lo` + `we`, then turn words into token IDs."
+      ],
+      "keyIdeas": [
+        "LLMs see text as tokens: words or pieces of words, each with an ID.",
+        "BPE builds tokens by merging the most frequent pairs of symbols.",
+        "Roughly 1 token is about 4 characters of English text.",
+        "Pricing, context limits and speed are all measured in tokens."
+      ],
+      "quiz": [
+        {
+          "q": "What does a tokenizer produce from text?",
+          "options": [
+            "Embeddings",
+            "A list of token IDs",
+            "A summary",
+            "Probabilities"
+          ],
+          "answer": 1,
+          "explain": "A tokenizer splits text into tokens and maps each to an ID number."
+        },
+        {
+          "q": "Why might an LLM struggle to count the letters in a word?",
+          "options": [
+            "It has no memory",
+            "Letters are removed during training",
+            "It sees tokens (chunks), not individual letters"
+          ],
+          "answer": 2,
+          "explain": "A word is often one or a few tokens, so individual letters are not directly visible to the model."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "toy_bpe.py",
+        "source": "# A toy BPE-style tokenizer: merge the most common pair of symbols\nfrom collections import Counter\n\ncorpus = [\"low\", \"lower\", \"lowest\", \"newer\", \"newest\", \"wider\"]\nwords = [list(w) for w in corpus]          # start from single characters\n\nfor step in range(5):\n    pairs = Counter()\n    for w in words:\n        pairs.update(zip(w, w[1:]))\n    (a, b), n = pairs.most_common(1)[0]\n    print(f\"merge {step + 1}: '{a}' + '{b}' -> '{a + b}' (seen {n} times)\")\n    new_words = []\n    for w in words:\n        i, merged = 0, []\n        while i < len(w):\n            if i < len(w) - 1 and w[i] == a and w[i + 1] == b:\n                merged.append(a + b); i += 2\n            else:\n                merged.append(w[i]); i += 1\n        new_words.append(merged)\n    words = new_words\n\nvocab = sorted({t for w in words for t in w})\nids = {t: i for i, t in enumerate(vocab)}\nfor w in words:\n    print(\"\".join(w), \"->\", w, \"-> ids\", [ids[t] for t in w])\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "embeddings",
+      "title": "Embeddings",
+      "summary": "Words as vectors, where similar meaning means close together.",
+      "resources": [
+        {
+          "title": "The Illustrated Word2vec (Jay Alammar)",
+          "url": "https://jalammar.github.io/illustrated-word2vec/",
+          "type": "article",
+          "minutes": 25
+        },
+        {
+          "title": "3Blue1Brown: Transformers, the tech behind LLMs",
+          "url": "https://www.3blue1brown.com/lessons/gpt/",
+          "type": "video",
+          "minutes": 27
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "Computers work with numbers, so models turn each token into a list of numbers called an **embedding** (a vector). Real embeddings have hundreds or thousands of numbers.",
+        "The magic is that embeddings are **learned** so that words with similar meanings end up close together. \"cat\" and \"dog\" land near each other, far from \"pizza\". Think of it as a map where every word has a location, and neighbors share meaning.",
+        "Directions in this space can carry meaning too. A famous example from word2vec: `king - man + woman` lands close to `queen`. The model was never told about gender or royalty; it picked up these patterns from how words are used.",
+        "To measure closeness we usually use **cosine similarity**, which checks whether two vectors point the same way: 1 means same direction, 0 means unrelated. Embeddings power semantic search, recommendations and RAG, where you find documents by meaning instead of exact keywords.",
+        "The code uses hand-made 4-number embeddings so you can read every dimension, then ranks words by cosine similarity to \"cat\"."
+      ],
+      "keyIdeas": [
+        "An embedding is a vector of numbers that represents a token or text.",
+        "Similar meanings end up close together in embedding space.",
+        "Cosine similarity measures how closely two vectors point the same way.",
+        "Embeddings power semantic search, recommendations and RAG."
+      ],
+      "quiz": [
+        {
+          "q": "Two embeddings have a cosine similarity close to 1. What does that suggest?",
+          "options": [
+            "Their meanings are unrelated",
+            "Their meanings are opposite",
+            "Their meanings are similar"
+          ],
+          "answer": 2,
+          "explain": "Vectors pointing in nearly the same direction represent similar meanings."
+        },
+        {
+          "q": "How do embeddings get their values in real models?",
+          "options": [
+            "They are learned from data during training",
+            "Linguists write them by hand",
+            "They are the token IDs",
+            "They are random and never change"
+          ],
+          "answer": 0,
+          "explain": "Training adjusts embeddings so that words used in similar ways end up close together."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "cosine.py",
+        "source": "# Similar meaning = vectors pointing the same way (cosine similarity)\nimport numpy as np\n\n# Hand-made 4-number \"embeddings\": [animal, pet, royalty, food]\nemb = {\n    \"cat\":   np.array([0.9, 0.8, 0.0, 0.1]),\n    \"dog\":   np.array([0.8, 0.9, 0.0, 0.3]),\n    \"lion\":  np.array([0.9, 0.1, 0.3, 0.0]),\n    \"king\":  np.array([0.1, 0.0, 0.9, 0.0]),\n    \"pizza\": np.array([0.0, 0.0, 0.0, 0.9]),\n}\n\ndef cosine(a, b):\n    return a @ b / (np.linalg.norm(a) * np.linalg.norm(b))\n\nquery = \"cat\"\nranked = sorted(emb, key=lambda w: cosine(emb[query], emb[w]), reverse=True)\nfor w in ranked:\n    print(f\"{query} vs {w:6s}: {cosine(emb[query], emb[w]):.2f}\")\n# Real embeddings have hundreds of numbers, learned from data, not hand-made.\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "attention-and-the-transformer",
+      "title": "Attention and the Transformer",
+      "summary": "Self-attention, queries, keys and values, transformer blocks.",
+      "resources": [
+        {
+          "title": "3Blue1Brown: Attention in transformers",
+          "url": "https://www.3blue1brown.com/lessons/attention/",
+          "type": "video",
+          "minutes": 26
+        },
+        {
+          "title": "The Illustrated Transformer (Jay Alammar)",
+          "url": "https://jalammar.github.io/illustrated-transformer/",
+          "type": "article",
+          "minutes": 30
+        }
+      ],
+      "minutes": 40,
+      "body": [
+        "Words get meaning from context. In \"the bank of the river\" versus \"money in the bank\", the word bank means different things. **Attention** is how a model lets each token look at the other tokens and pull in the information it needs.",
+        "Each token makes three vectors from its embedding. The **query** says what it is looking for, the **key** says what it contains, and the **value** is the information it can share. It is like a library: your question (query) is compared with book labels (keys), and you read the matching books (values).",
+        "The model scores every query against every key with a dot product, divides by the square root of the vector size, and uses **softmax** to turn the scores into weights that add up to 1. Each token's output is a weighted blend of all the values. This is **self-attention**, and running several in parallel is called **multi-head attention**.",
+        "A **Transformer** stacks many **blocks**. Each block has an attention layer (tokens share information) and a small feed-forward network (each token is processed on its own), plus shortcuts called residual connections and normalization. GPT-style models also use a mask so each token can only attend to tokens before it.",
+        "Because attention handles all tokens at once rather than one by one, Transformers train fast on GPUs, which is a big reason they took over AI. The code runs self-attention for three tokens in plain NumPy."
+      ],
+      "keyIdeas": [
+        "Attention lets each token gather information from other tokens.",
+        "Queries are matched with keys; the weights then blend the values.",
+        "softmax(Q K^T / sqrt(d)) V is the core attention formula.",
+        "A Transformer stacks blocks of attention plus a feed-forward network."
+      ],
+      "quiz": [
+        {
+          "q": "In attention, what are queries compared against to compute the scores?",
+          "options": [
+            "Keys",
+            "Values",
+            "Token IDs",
+            "Labels"
+          ],
+          "answer": 0,
+          "explain": "Each query is dot-multiplied with every key to score how relevant each token is."
+        },
+        {
+          "q": "What does softmax do to the attention scores?",
+          "options": [
+            "Turns them into weights that are positive and add up to 1",
+            "Sorts them from high to low",
+            "Removes the largest score"
+          ],
+          "answer": 0,
+          "explain": "Softmax turns raw scores into a probability-like set of weights for blending the values."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "self_attention.py",
+        "source": "# Scaled dot-product self-attention in NumPy\nimport numpy as np\n\nnp.random.seed(0)\ntokens = [\"the\", \"cat\", \"sat\"]\nd = 4                                   # embedding size\nX = np.random.randn(3, d) * 0.5             # one vector per token\n\n# Learned weight matrices (random here) make queries, keys and values\nWq, Wk, Wv = (np.random.randn(d, d) for _ in range(3))\nQ, K, V = X @ Wq, X @ Wk, X @ Wv\n\nscores = Q @ K.T / np.sqrt(d)           # how well each query matches each key\n\ndef softmax(z):\n    e = np.exp(z - z.max(axis=-1, keepdims=True))\n    return e / e.sum(axis=-1, keepdims=True)\n\nweights = softmax(scores)               # each row sums to 1\noutput = weights @ V                    # blend of values, per token\n\nprint(\"Attention weights (row = token looking, column = token looked at):\")\nfor t, row in zip(tokens, weights):\n    print(f\"  {t:>4}: \" + \"  \".join(f\"{w:.2f}\" for w in row))\nprint(\"Output shape:\", output.shape, \"(same as input: one new vector per token)\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "see-it-run",
+      "title": "See it run",
+      "summary": "Explore a live GPT-2: attention maps, temperature, top-k and top-p.",
+      "resources": [
+        {
+          "title": "Transformer Explainer (Georgia Tech)",
+          "url": "https://poloclub.github.io/transformer-explainer/",
+          "type": "interactive",
+          "minutes": 15
+        }
+      ],
+      "minutes": 20,
+      "body": [
+        "Now it is time to watch a real model work. The Transformer Explainer runs a small GPT-2 in your browser and shows each step: tokens, embeddings, attention and the final next-token probabilities.",
+        "At the end of the model, every possible next token gets a raw score called a **logit**. Softmax turns these into probabilities. The model then **samples** one token, and how it samples changes the personality of the text.",
+        "**Temperature** reshapes the probabilities before sampling. A low temperature (like 0.2) makes the top choice dominate, so text is focused and predictable. A high temperature (like 1.5) flattens things out, giving more variety and more chance of nonsense. Think of it as a creativity dial.",
+        "**Top-k** keeps only the k most likely tokens. **Top-p** (nucleus sampling) keeps the smallest set of tokens whose probabilities add up to p, such as 0.9. Both cut off the weird long tail of unlikely words, and the remaining probabilities are rescaled to add up to 1.",
+        "The code applies temperature, top-k and top-p to a made-up next-token distribution, so you can predict what the sliders in the explainer will do."
+      ],
+      "keyIdeas": [
+        "The model outputs logits; softmax turns them into probabilities.",
+        "Low temperature is focused and predictable; high temperature is varied.",
+        "Top-k keeps the k most likely tokens.",
+        "Top-p keeps the smallest set of tokens whose probabilities reach p."
+      ],
+      "quiz": [
+        {
+          "q": "You want the model to give consistent, predictable answers. What should you do with the temperature?",
+          "options": [
+            "Raise it",
+            "Lower it",
+            "Set top-k to its maximum"
+          ],
+          "answer": 1,
+          "explain": "A low temperature sharpens the distribution so the most likely tokens win."
+        },
+        {
+          "q": "With top-p = 0.9, which tokens are kept?",
+          "options": [
+            "The 9 most likely tokens",
+            "Every token with probability above 0.9",
+            "The smallest set of top tokens whose probabilities add up to at least 0.9",
+            "Only the single most likely token"
+          ],
+          "answer": 2,
+          "explain": "Top-p keeps adding the most likely tokens until their total probability reaches p."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "sampling.py",
+        "source": "# Temperature, top-k and top-p on a made-up next-token distribution\nimport numpy as np\n\ntokens = [\"Paris\", \"London\", \"the\", \"a\", \"Rome\", \"banana\"]\nlogits = np.array([4.0, 2.5, 2.0, 1.5, 1.0, -1.0])   # raw model scores\n\ndef softmax(z):\n    e = np.exp(z - z.max())\n    return e / e.sum()\n\ndef show(title, probs):\n    print(title)\n    for t, p in zip(tokens, probs):\n        if p > 0:\n            print(f\"   {t:7s} {p:.2f}\")\n\nfor temp in [0.5, 1.0, 2.0]:\n    show(f\"temperature {temp}:\", softmax(logits / temp))\n\n# top-k: keep only the k most likely tokens, then renormalize\nprobs = softmax(logits)\nk = 2\nkeep = probs >= np.sort(probs)[-k]\nshow(f\"top-k (k={k}):\", np.where(keep, probs, 0) / probs[keep].sum())\n\n# top-p: keep the smallest set of tokens whose probabilities add up to p\norder = np.argsort(probs)[::-1]\ncut = np.searchsorted(np.cumsum(probs[order]), 0.9) + 1\nmask = np.zeros_like(probs); mask[order[:cut]] = 1\nshow(\"top-p (p=0.9):\", probs * mask / (probs * mask).sum())\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "pretraining-vs-fine-tuning",
+      "title": "Pretraining vs fine-tuning",
+      "summary": "Training from scratch vs adapting a trained model.",
+      "resources": [
+        {
+          "title": "Hugging Face: How do Transformers work?",
+          "url": "https://huggingface.co/learn/llm-course/chapter1/4",
+          "type": "course",
+          "minutes": 15
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "**Pretraining** is training a model from scratch on an enormous amount of general data, such as trillions of tokens of text. It costs a fortune in compute, and only a handful of organizations do it. The result is a **base model** that knows a lot about language but is not tailored to any one job.",
+        "**Fine-tuning** takes that pretrained model and keeps training it on a much smaller, focused dataset: customer support chats, medical notes, or examples of a particular style. It is like a doctor who went through general medical school (pretraining) and then does a short specialty residency (fine-tuning).",
+        "Fine-tuning is far cheaper because the model already knows the basics. Popular methods like **LoRA** make it even cheaper by training only a small number of extra weights while the original model stays frozen.",
+        "Fine-tuning is not always the answer. Often good prompting or giving the model the right documents (RAG) solves the problem with no training at all. Fine-tune when you need a consistent style or format, or a skill the base model lacks.",
+        "The code shows the idea with a simple classifier: one model is pretrained on lots of digit images and then fine-tuned on 40 examples of a new variation, while another trains from scratch on the same 40. The head start wins."
+      ],
+      "keyIdeas": [
+        "Pretraining builds general knowledge from huge data and costs a lot.",
+        "Fine-tuning adapts a pretrained model with a small, focused dataset.",
+        "LoRA and similar methods make fine-tuning even cheaper.",
+        "Try prompting or RAG first; fine-tune when those are not enough."
+      ],
+      "quiz": [
+        {
+          "q": "Why is fine-tuning much cheaper than pretraining?",
+          "options": [
+            "It uses a bigger model",
+            "It skips the loss function",
+            "The model already learned general knowledge, so only a small update is needed"
+          ],
+          "answer": 2,
+          "explain": "Fine-tuning builds on what pretraining already learned, so it needs far less data and compute."
+        },
+        {
+          "q": "Which situation is a good fit for fine-tuning?",
+          "options": [
+            "You need the model to always reply in a specific format and style",
+            "You need answers about today's news",
+            "You want to look up facts in your company documents",
+            "You want to count tokens"
+          ],
+          "answer": 0,
+          "explain": "Consistent style or format is a classic fine-tuning goal; fresh facts and documents are better served by RAG."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "finetune_vs_scratch.py",
+        "source": "# Fine-tuning vs training from scratch, with the same tiny budget\nimport numpy as np\nfrom sklearn.datasets import load_digits\nfrom sklearn.linear_model import SGDClassifier\nfrom sklearn.model_selection import train_test_split\n\nX, y = load_digits(return_X_y=True)\nX = X / 16.0\nX_pre, X_new, y_pre, y_new = train_test_split(X, y, test_size=0.3, random_state=0)\n# New task: the same digits, but drawn more faintly, and only 40 labels\nX_new = X_new * 0.5\nXtr, Xte, ytr, yte = X_new[:40], X_new[40:], y_new[:40], y_new[40:]\nclasses = np.arange(10)\n\n# \"Pretraining\": lots of data, many passes\nmodel = SGDClassifier(loss=\"log_loss\", random_state=0)\nfor _ in range(30):\n    model.partial_fit(X_pre, y_pre, classes=classes)\nprint(f\"pretrained, before fine-tuning:   {model.score(Xte, yte):.2f}\")\n\n# Fine-tune: start from the pretrained weights, 5 passes over 40 examples\nfor _ in range(5):\n    model.partial_fit(Xtr, ytr)\nprint(f\"pretrained + fine-tuned on 40:    {model.score(Xte, yte):.2f}\")\n\n# From scratch: same 40 examples, same 5 passes, random start\nscratch = SGDClassifier(loss=\"log_loss\", random_state=0)\nfor _ in range(5):\n    scratch.partial_fit(Xtr, ytr, classes=classes)\nprint(f\"from scratch on the same 40:      {scratch.score(Xte, yte):.2f}\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "open-models-with-hugging-face",
+      "title": "Open models with Hugging Face",
+      "summary": "Find a model on the Hub and run it with a pipeline.",
+      "resources": [
+        {
+          "title": "Hugging Face: The Model Hub",
+          "url": "https://huggingface.co/docs/hub/models-the-hub",
+          "type": "docs",
+          "minutes": 5
+        },
+        {
+          "title": "Transformers Quickstart",
+          "url": "https://huggingface.co/docs/transformers/quicktour",
+          "type": "docs",
+          "minutes": 20
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "**Hugging Face** is the main home of open AI models. Its **Hub** hosts hundreds of thousands of models and datasets that anyone can download, from small sentiment classifiers to large open LLMs.",
+        "Each model has a **model card**, a page explaining what it does, how it was trained, its license and its limitations. Read it before you use a model, the same way you would read a medicine label. You can filter the Hub by task (like text classification or text generation), language, size and license.",
+        "The `transformers` library makes running a model surprisingly easy. The `pipeline` function bundles the tokenizer, the model and the post-processing into one call: you give it text, it gives you an answer. The first run downloads the model, then it is cached on your machine.",
+        "Small models run fine on a laptop CPU. Bigger ones need a GPU, which free services like Google Colab provide. Open models let you run AI privately, offline and without per-token fees, at the cost of handling the hardware yourself.",
+        "The code uses `pipeline` for sentiment analysis and text generation. It downloads models, so run it in Colab or on your computer rather than in this page."
+      ],
+      "keyIdeas": [
+        "The Hugging Face Hub hosts open models and datasets for anyone to use.",
+        "Read the model card: task, training data, license and limitations.",
+        "pipeline() wraps the tokenizer, model and post-processing in one call.",
+        "Small models run on a CPU; larger ones need a GPU."
+      ],
+      "quiz": [
+        {
+          "q": "What does a Hugging Face pipeline bundle together?",
+          "options": [
+            "The tokenizer, the model and the post-processing",
+            "Only the training data",
+            "A web server and a database"
+          ],
+          "answer": 0,
+          "explain": "pipeline() handles turning text into tokens, running the model and formatting the output."
+        },
+        {
+          "q": "Where should you check a model's license and limitations?",
+          "options": [
+            "In the tokenizer",
+            "In the model card",
+            "In the pipeline output",
+            "Nowhere, all models are unrestricted"
+          ],
+          "answer": 1,
+          "explain": "The model card documents how the model was made, how it may be used and where it falls short."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "hf_pipeline.py",
+        "source": "# pip install transformers torch\nfrom transformers import pipeline\n\n# Downloads a small model from the Hugging Face Hub the first time\nclassifier = pipeline(\"sentiment-analysis\",\n                      model=\"distilbert-base-uncased-finetuned-sst-2-english\")\nprint(classifier([\"I love this course!\", \"This bug is driving me crazy.\"]))\n\n# Text generation with a small open model\ngenerator = pipeline(\"text-generation\", model=\"gpt2\")\nresult = generator(\"Machine learning is\", max_new_tokens=20, do_sample=True)\nprint(result[0][\"generated_text\"])\n",
+        "runnable": false,
+        "note": "Downloads models from the Hugging Face Hub, so run it in Google Colab or on your computer."
+      }
+    }
+  ]
+}

@@ -1,0 +1,364 @@
+{
+  "slug": "python-for-ai",
+  "title": "Python for AI",
+  "short": "Python",
+  "level": "Beginner",
+  "blurb": "Enough Python, NumPy and pandas to read and run every code example in the later courses.",
+  "stage": "foundations",
+  "order": 2,
+  "lessons": [
+    {
+      "slug": "set-up-notebooks-in-google-colab",
+      "title": "Set up: notebooks in Google Colab",
+      "summary": "Run Python in the browser with nothing to install.",
+      "resources": [
+        {
+          "title": "Welcome to Colab (official intro notebook)",
+          "url": "https://colab.research.google.com/notebooks/intro.ipynb",
+          "type": "interactive",
+          "minutes": 10
+        }
+      ],
+      "minutes": 15,
+      "body": [
+        "A **notebook** is a document that mixes code, its results and your notes in one place. Instead of one long program, you write small **cells** and run them one at a time, seeing each result right underneath. It is like a lab notebook where every experiment shows its outcome next to it.",
+        "**Google Colab** gives you free notebooks that run in your browser on Google's computers. All you need is a Google account: go to colab.research.google.com, click New notebook, type `print(\"hello\")` in a cell and press Shift+Enter. Popular AI libraries like NumPy, pandas and scikit-learn are already installed.",
+        "Notebooks remember what you have run. A variable created in one cell can be used in any later cell, but only after you have run the cell that creates it. If things get confusing, use **Runtime > Restart and run all** to start fresh from the top.",
+        "Colab also has **text cells** for notes and a free GPU option for heavier deep learning later on. Your notebooks save to Google Drive, so you can come back to them or share them like any other document."
+      ],
+      "keyIdeas": [
+        "A notebook is made of cells you run one at a time.",
+        "Colab runs Python in your browser with nothing to install.",
+        "Variables carry over between cells once you run them.",
+        "Restart and run all is the fix when the notebook gets muddled."
+      ],
+      "quiz": [
+        {
+          "q": "What happens when you run a notebook cell?",
+          "options": [
+            "The whole notebook is deleted",
+            "The code runs and its output appears below it",
+            "It is emailed to Google"
+          ],
+          "answer": 1,
+          "explain": "Each cell's output appears right under it, which makes experimenting easy."
+        },
+        {
+          "q": "You get NameError for a variable defined in an earlier cell. What is the likely cause?",
+          "options": [
+            "Python is broken",
+            "Colab needs a GPU",
+            "Variables never carry between cells",
+            "That earlier cell has not been run yet"
+          ],
+          "answer": 3,
+          "explain": "A variable exists only after the cell that creates it has been run in this session."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "first_cells.py",
+        "source": "# A notebook is a list of cells. Each cell is a small piece of code you run\n# on its own, and the result appears right underneath it.\n\n# Cell 1: Python works like a calculator.\nprint(2 + 3 * 4)\n\n# Cell 2: variables you create stay around for later cells.\nname = \"Ada\"\nhours_per_week = 3\n\n# Cell 3: use them again.\nweeks = 8\nprint(f\"{name} will study for {hours_per_week * weeks} hours in {weeks} weeks.\")\n\n# Cell 4: check which Python version is running.\nimport sys\nprint(\"Python version:\", sys.version.split()[0])\n",
+        "runnable": true,
+        "note": "Each comment block is like one notebook cell; in Colab you would run them one by one."
+      }
+    },
+    {
+      "slug": "python-basics",
+      "title": "Python basics",
+      "summary": "Variables, types, functions, conditions, loops, lists and dicts.",
+      "resources": [
+        {
+          "title": "Kaggle Learn: Python",
+          "url": "https://www.kaggle.com/learn/python",
+          "type": "course",
+          "minutes": 300
+        },
+        {
+          "title": "W3Schools Python Tutorial",
+          "url": "https://www.w3schools.com/python/",
+          "type": "interactive",
+          "minutes": 120
+        }
+      ],
+      "minutes": 40,
+      "body": [
+        "A **variable** is a labeled box that holds a value: `city = \"Lisbon\"`. The main basic **types** are text (`str`), whole numbers (`int`), decimals (`float`) and `True`/`False` values (`bool`). Python works out the type for you.",
+        "A **function** is a reusable recipe. You define it once with `def`, give it inputs, and it `return`s a result. Inside, **conditions** (`if`, `elif`, `else`) let your code make choices, like picking \"hot\" or \"cold\" based on the temperature.",
+        "A **list** keeps items in order, like a shopping list: `[18.0, 26.5, 12.0]`. A `for` **loop** goes through the items one by one so you can do the same thing to each. Python uses indentation (spaces at the start of a line) to show which lines belong inside a loop, function or `if`.",
+        "A **dict** (dictionary) stores pairs of keys and values, so you can look things up by name: `capitals[\"France\"]` gives `\"Paris\"`. Lists and dicts are everywhere in AI code, for example a list of training examples or a dict of settings."
+      ],
+      "keyIdeas": [
+        "Variables hold values; common types are str, int, float and bool.",
+        "Functions are reusable recipes; if/elif/else make decisions.",
+        "Lists hold ordered items and for loops walk through them.",
+        "Dicts map keys to values for quick lookup."
+      ],
+      "quiz": [
+        {
+          "q": "What is the type of the value 21.5?",
+          "options": [
+            "float",
+            "int",
+            "str",
+            "bool"
+          ],
+          "answer": 0,
+          "explain": "Numbers with a decimal point are floats."
+        },
+        {
+          "q": "How would you get Tokyo from capitals = {\"Japan\": \"Tokyo\"}?",
+          "options": [
+            "capitals[0]",
+            "capitals.Tokyo",
+            "capitals[\"Japan\"]"
+          ],
+          "answer": 2,
+          "explain": "You look up a dict value by its key, here \"Japan\"."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "basics.py",
+        "source": "# Variables and types\ncity = \"Lisbon\"          # str (text)\ntemperature = 21.5       # float (decimal number)\ndays = 3                 # int (whole number)\nis_sunny = True          # bool (True or False)\n\n# A function: a reusable recipe with inputs and an output\ndef describe(temp):\n    if temp >= 25:\n        return \"hot\"\n    elif temp >= 15:\n        return \"mild\"\n    else:\n        return \"cold\"\n\nprint(city, \"is\", describe(temperature))\n\n# A list: an ordered collection\nforecast = [18.0, 26.5, 12.0]\nfor day, temp in enumerate(forecast, start=1):\n    print(f\"Day {day}: {temp} degrees, {describe(temp)}\")\n\n# A dict: look up values by a key, like a real dictionary\ncapitals = {\"France\": \"Paris\", \"Japan\": \"Tokyo\"}\ncapitals[\"Peru\"] = \"Lima\"\nfor country, capital in capitals.items():\n    print(f\"The capital of {country} is {capital}\")\nprint(\"Number of countries:\", len(capitals))\n",
+        "runnable": true,
+        "note": "Change the numbers and names, run it again, and see what changes."
+      }
+    },
+    {
+      "slug": "going-further-the-official-tutorial",
+      "title": "Going further: the official tutorial",
+      "summary": "Data structures, modules and errors, as reference reading.",
+      "resources": [
+        {
+          "title": "The Python Tutorial (python.org)",
+          "url": "https://docs.python.org/3/tutorial/index.html",
+          "type": "docs",
+          "minutes": 180
+        }
+      ],
+      "minutes": 35,
+      "body": [
+        "The official Python tutorial is the best free reference, and you do not need to read it all at once. Treat it like a cookbook: dip in when you need a recipe. The sections on data structures, modules and errors are the most useful for AI work.",
+        "Beyond lists and dicts, Python has **tuples** (like lists but fixed, written with round brackets) and **sets** (collections with no duplicates). A **list comprehension** builds a new list in one line, such as `[n * n for n in numbers]`, and you will see them constantly in AI code.",
+        "A **module** is a file of ready-made code you bring in with `import`. Python ships with many, like `math`, `random` and `collections`. Libraries such as NumPy and pandas are just bigger modules installed separately.",
+        "When something goes wrong, Python raises an **exception** with a message and a traceback. Read it from the bottom up: the last line says what went wrong. With `try` and `except` you can catch an expected error and handle it calmly instead of letting the program crash."
+      ],
+      "keyIdeas": [
+        "Use the official tutorial as a reference, not a cover-to-cover read.",
+        "Tuples are fixed lists; sets remove duplicates; comprehensions build lists fast.",
+        "import brings in modules of ready-made code.",
+        "Read errors from the bottom line up; try/except handles expected ones."
+      ],
+      "quiz": [
+        {
+          "q": "What does [n * 2 for n in [1, 2, 3]] produce?",
+          "options": [
+            "[1, 2, 3, 1, 2, 3]",
+            "[2, 4, 6]",
+            "6",
+            "An error"
+          ],
+          "answer": 1,
+          "explain": "A list comprehension applies n * 2 to every item, giving [2, 4, 6]."
+        },
+        {
+          "q": "Where in a Python traceback do you find what actually went wrong?",
+          "options": [
+            "The first line",
+            "The middle",
+            "The last line"
+          ],
+          "answer": 2,
+          "explain": "The last line names the error type and message."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "beyond_basics.py",
+        "source": "import math                      # a module: ready-made code you import\nfrom collections import Counter  # import one tool from a module\n\n# List comprehension: build a new list in one line\nnumbers = [1, 2, 3, 4, 5, 6]\nsquares = [n * n for n in numbers if n % 2 == 0]\nprint(\"Even squares:\", squares)\n\n# Tuples and sets\npoint = (3, 4)                   # tuple: fixed, cannot be changed\nprint(\"Distance from origin:\", math.hypot(*point))\ntags = {\"ai\", \"python\", \"ai\"}    # set: duplicates disappear\nprint(\"Unique tags:\", sorted(tags))\n\n# Counting things with a module\nwords = \"the cat and the hat and the bat\".split()\nprint(\"Most common:\", Counter(words).most_common(2))\n\n# Errors: handle them instead of crashing\ndef safe_divide(a, b):\n    try:\n        return a / b\n    except ZeroDivisionError:\n        print(\"Cannot divide by zero, returning None\")\n        return None\n\nprint(safe_divide(10, 4))\nprint(safe_divide(1, 0))\n",
+        "runnable": true,
+        "note": "Use this as a sampler, then read the matching sections of the official tutorial."
+      }
+    },
+    {
+      "slug": "numpy-arrays-and-fast-math",
+      "title": "NumPy: arrays and fast math",
+      "summary": "Arrays, shapes, indexing, broadcasting and aggregations.",
+      "resources": [
+        {
+          "title": "NumPy: the absolute basics for beginners",
+          "url": "https://numpy.org/doc/stable/user/absolute_beginners.html",
+          "type": "docs",
+          "minutes": 45
+        }
+      ],
+      "minutes": 35,
+      "body": [
+        "**NumPy** is the foundation of almost all AI code in Python. Its core object is the **array**: a grid of numbers of the same type. A 1D array is a row of numbers, a 2D array is a table, and higher dimensions hold things like images and batches of data.",
+        "Every array has a **shape**, written as a tuple like `(2, 3)` meaning 2 rows and 3 columns. Checking `.shape` is the single most useful debugging habit in AI work, because most bugs are shapes that do not line up.",
+        "You pick out values with **indexing** and **slicing**: `scores[1, 2]` is row 1, column 2 (counting from 0), and `scores[:, 0]` is the whole first column. A **boolean mask** like `scores[scores > 80]` keeps only the values that match a condition.",
+        "Math on arrays works on every element at once, with no loop needed, and it is much faster than plain Python. **Broadcasting** stretches a smaller array to fit a bigger one, so multiplying a table by a row of three weights applies each weight to its column. **Aggregations** like `.mean()`, `.sum()` and `.max()` can work on the whole array or along an `axis`."
+      ],
+      "keyIdeas": [
+        "Arrays are fast grids of numbers; NumPy powers most AI libraries.",
+        "Always check .shape; mismatched shapes cause most bugs.",
+        "Index with [row, col], slice with :, filter with boolean masks.",
+        "Math is element-wise, broadcasting stretches shapes, axis picks direction."
+      ],
+      "quiz": [
+        {
+          "q": "An array has shape (2, 3). What does that mean?",
+          "options": [
+            "2 rows and 3 columns",
+            "3 rows and 2 columns",
+            "6 rows",
+            "Values between 2 and 3"
+          ],
+          "answer": 0,
+          "explain": "Shape lists the size of each dimension: rows first, then columns."
+        },
+        {
+          "q": "For a 2D array, what does .mean(axis=1) give you?",
+          "options": [
+            "One average for the whole array",
+            "The average of each column",
+            "The average of each row"
+          ],
+          "answer": 2,
+          "explain": "axis=1 averages across the columns, giving one value per row."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "arrays.py",
+        "source": "import numpy as np\n\n# An array holds many numbers of the same type\nscores = np.array([[90, 75, 60],     # each row: one student\n                   [80, 85, 95]])    # each column: one test\nprint(\"Shape (rows, columns):\", scores.shape)\n\n# Indexing and slicing\nprint(\"Student 2, test 3:\", scores[1, 2])\nprint(\"All of test 1:\", scores[:, 0])\n\n# Math on the whole array at once (no loops!)\nprint(\"Plus 5 bonus points:\\n\", scores + 5)\n\n# Broadcasting: a small array is stretched to match a bigger one\nweights = np.array([0.2, 0.3, 0.5])  # one weight per test\nprint(\"Weighted scores:\\n\", scores * weights)\n\n# Aggregations, along a chosen axis\nprint(\"Average per student:\", scores.mean(axis=1).round(1))\nprint(\"Best per test:\", scores.max(axis=0))\n\n# Boolean masks: pick values that match a condition\nprint(\"Scores above 80:\", scores[scores > 80])\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "pandas-working-with-tables",
+      "title": "pandas: working with tables",
+      "summary": "DataFrames: select, filter, group and read CSV files.",
+      "resources": [
+        {
+          "title": "10 minutes to pandas",
+          "url": "https://pandas.pydata.org/docs/user_guide/10min.html",
+          "type": "docs",
+          "minutes": 30
+        },
+        {
+          "title": "Kaggle Learn: Pandas",
+          "url": "https://www.kaggle.com/learn/pandas",
+          "type": "course",
+          "minutes": 240
+        }
+      ],
+      "minutes": 40,
+      "body": [
+        "**pandas** is the go-to tool for table data in Python, like a spreadsheet you control with code. A table is called a **DataFrame**: rows of records and named columns. A single column is a **Series**.",
+        "Most data arrives as a CSV file, and `pd.read_csv(\"file.csv\")` loads it in one line. Then take a first look with `df.head()` for the first rows, `df.shape` for the size, and `df.describe()` for quick statistics.",
+        "Select a column with `df[\"hours\"]`, and several with `df[[\"name\", \"hours\"]]`. **Filter** rows with a condition inside the brackets, like `df[df[\"hours\"] > 5]`. Create a new column just by assigning to it, and pandas does the math for every row at once.",
+        "**Grouping** answers questions like \"what is the total per team?\": `df.groupby(\"team\")[\"hours\"].sum()`. Together with `sort_values`, these few moves cover most of the data preparation you will do before training a model."
+      ],
+      "keyIdeas": [
+        "A DataFrame is a table; each column is a Series.",
+        "read_csv loads data; head, shape and describe give a first look.",
+        "Filter rows with df[condition]; select columns by name.",
+        "groupby plus sum or mean summarizes data by category."
+      ],
+      "quiz": [
+        {
+          "q": "How do you keep only the rows where hours is above 5?",
+          "options": [
+            "df[df[\"hours\"] > 5]",
+            "df.hours(5)",
+            "df.filter(5)"
+          ],
+          "answer": 0,
+          "explain": "Putting a True/False condition inside the brackets keeps the matching rows."
+        },
+        {
+          "q": "Which pandas method would give total sales per region?",
+          "options": [
+            "read_csv",
+            "head",
+            "groupby",
+            "shape"
+          ],
+          "answer": 2,
+          "explain": "groupby splits rows by region so you can sum each group."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "tables.py",
+        "source": "import io\nimport pandas as pd\n\n# Pretend this text is a CSV file on disk\ncsv_text = \"\"\"name,team,hours,tasks\nAna,red,5,3\nBen,blue,8,6\nCara,red,3,2\nDev,blue,6,5\nEli,red,7,6\"\"\"\ndf = pd.read_csv(io.StringIO(csv_text))  # normally: pd.read_csv(\"file.csv\")\n\nprint(df.head(), \"\\n\")\nprint(\"Columns:\", list(df.columns), \"| rows:\", len(df), \"\\n\")\n\n# Select a column, and add a new one\ndf[\"tasks_per_hour\"] = (df[\"tasks\"] / df[\"hours\"]).round(2)\n\n# Filter rows with a condition\nprint(\"Worked more than 5 hours:\")\nprint(df[df[\"hours\"] > 5][[\"name\", \"hours\"]], \"\\n\")\n\n# Group and summarize\nprint(\"Totals by team:\")\nprint(df.groupby(\"team\")[[\"hours\", \"tasks\"]].sum(), \"\\n\")\n\n# Sort\nprint(df.sort_values(\"tasks_per_hour\", ascending=False).head(3))\n",
+        "runnable": true,
+        "note": "io.StringIO lets the CSV text act like a file; with a real file just pass its name."
+      }
+    },
+    {
+      "slug": "plotting-your-data",
+      "title": "Plotting your data",
+      "summary": "Line, bar and scatter plots with Matplotlib and Seaborn.",
+      "resources": [
+        {
+          "title": "Matplotlib Quick Start Guide",
+          "url": "https://matplotlib.org/stable/users/explain/quick_start.html",
+          "type": "docs",
+          "minutes": 30
+        },
+        {
+          "title": "Kaggle Learn: Data Visualization",
+          "url": "https://www.kaggle.com/learn/data-visualization",
+          "type": "course",
+          "minutes": 240
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "A chart often shows in a second what a table hides: a trend, an outlier, a pattern. **Matplotlib** is Python's main plotting library, and **Seaborn** is built on top of it to make good-looking statistical charts with less code.",
+        "Pick the chart by the question. A **line plot** shows how something changes over time. A **bar chart** compares amounts across categories. A **scatter plot** puts two numbers against each other to show whether they move together.",
+        "The basic Matplotlib pattern is: create a figure and axes with `plt.subplots()`, draw on the axes with `.plot()`, `.bar()` or `.scatter()`, add a title and axis labels, then `plt.show()`. With pandas you can also call `df.plot()` directly on a table.",
+        "In AI work you will plot constantly: looking at your data before modelling, and drawing **training curves** to see if a model is still improving. Always label your axes; a chart nobody can read is a chart nobody uses."
+      ],
+      "keyIdeas": [
+        "Line for change over time, bar for comparing categories, scatter for relationships.",
+        "Pattern: fig, ax = plt.subplots(), draw, label, plt.show().",
+        "Seaborn builds on Matplotlib for nicer statistical charts.",
+        "Always label axes and titles."
+      ],
+      "quiz": [
+        {
+          "q": "Which chart best shows whether study hours relate to test scores?",
+          "options": [
+            "Bar chart",
+            "Pie chart",
+            "Scatter plot"
+          ],
+          "answer": 2,
+          "explain": "A scatter plot shows how two numeric values move together."
+        },
+        {
+          "q": "Which chart fits monthly website visits over a year?",
+          "options": [
+            "Scatter plot",
+            "Line plot",
+            "No chart, only a table",
+            "Histogram of names"
+          ],
+          "answer": 1,
+          "explain": "Line plots are made for showing change over time."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "three_plots.py",
+        "source": "import numpy as np\nimport matplotlib.pyplot as plt\n\nmonths = [\"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\"]\nsales = [12, 15, 14, 20, 24, 27]\n\nrng = np.random.default_rng(0)\nad_spend = rng.uniform(1, 10, 40)\nvisits = 30 * ad_spend + rng.normal(0, 25, 40)\n\nfig, axes = plt.subplots(1, 3, figsize=(12, 3.5))\n\n# Line plot: how something changes over time\naxes[0].plot(months, sales, marker=\"o\")\naxes[0].set_title(\"Line: sales over time\")\n\n# Bar plot: compare categories\naxes[1].bar([\"A\", \"B\", \"C\"], [40, 25, 35], color=\"tab:orange\")\naxes[1].set_title(\"Bar: sales by product\")\n\n# Scatter plot: is there a relationship between two numbers?\naxes[2].scatter(ad_spend, visits, alpha=0.7)\naxes[2].set_xlabel(\"Ad spend\")\naxes[2].set_ylabel(\"Visits\")\naxes[2].set_title(\"Scatter: spend vs visits\")\n\nplt.tight_layout()\nplt.show()\n",
+        "runnable": true,
+        "note": "The site draws the open figure as an image under the output."
+      }
+    }
+  ]
+}

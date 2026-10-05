@@ -1,0 +1,419 @@
+{
+  "slug": "evals-fine-tuning",
+  "title": "Evaluation & Fine-tuning",
+  "short": "Evals & Tuning",
+  "level": "Advanced",
+  "blurb": "Measure whether your AI app works, then adapt a model with LoRA when prompting is not enough.",
+  "stage": "build-with-llms",
+  "order": 9,
+  "lessons": [
+    {
+      "slug": "why-evals-matter",
+      "title": "Why evals matter",
+      "summary": "Tests, human and model review, and the eval feedback loop.",
+      "resources": [
+        {
+          "title": "Hamel Husain: Your AI Product Needs Evals",
+          "url": "https://hamel.dev/blog/posts/evals/",
+          "type": "article",
+          "minutes": 25
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "An **eval** is a test for your AI app. You collect example inputs, run your app on them, and score the outputs. It is the same idea as a spell-checker for an essay: instead of rereading everything by eye each time, you let a check find the problems for you.",
+        "Without evals, building with LLMs turns into guesswork. You tweak a prompt, try two or three questions, and it *feels* better. But the change might have quietly broken ten other cases you did not look at. A small test set catches that in seconds.",
+        "There are three common ways to score an output: **code checks** (does it contain the right number, is it valid JSON), **human review** (a person reads it and rates it), and **model review** (another LLM grades it with a rubric). Cheap code checks run on every change; people and model judges cover what code cannot.",
+        "Evals power a feedback loop: look at real outputs, spot a failure, add it as a test case, change the prompt or model, and rerun the whole set. Each turn of the loop makes your test set more realistic and your app more reliable.",
+        "In the code below, two versions of a fake model run on the same five test cases. The pass rate shows clearly that version 2 is better, and which case still fails."
+      ],
+      "keyIdeas": [
+        "An eval is a repeatable test set plus a way to score outputs.",
+        "Spot-checking a few examples hides regressions; a test set catches them.",
+        "Score with code checks, human review, or an LLM judge.",
+        "Every real-world failure you find should become a new test case."
+      ],
+      "quiz": [
+        {
+          "q": "Why is trying a prompt on two or three questions not enough?",
+          "options": [
+            "LLMs only answer three questions per day",
+            "A change can fix one case while breaking others you did not check",
+            "Short tests use too many tokens"
+          ],
+          "answer": 1,
+          "explain": "A fixed test set reveals regressions that a quick spot-check misses."
+        },
+        {
+          "q": "Which scoring method is cheapest to run on every change?",
+          "options": [
+            "Hiring expert reviewers",
+            "Simple code checks like 'contains the right answer'",
+            "Retraining the model"
+          ],
+          "answer": 1,
+          "explain": "Code-based checks are instant and free, so they can run every time."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "tiny_eval.py",
+        "source": "# A tiny eval: run a \"model\" on test cases and score it automatically.\n\ndef model_v1(question):\n    # Pretend LLM: a fixed lookup with a few mistakes\n    answers = {\"capital of France\": \"Paris\", \"2 + 2\": \"4\",\n               \"largest planet\": \"Saturn\", \"color of the sky\": \"blue\"}\n    return answers.get(question, \"I am not sure\")\n\ndef model_v2(question):\n    # \"Improved prompt\" version: fixes one bug\n    answer = model_v1(question)\n    return \"Jupiter\" if question == \"largest planet\" else answer\n\ntest_cases = [\n    {\"q\": \"capital of France\", \"expected\": \"paris\"},\n    {\"q\": \"2 + 2\", \"expected\": \"4\"},\n    {\"q\": \"largest planet\", \"expected\": \"jupiter\"},\n    {\"q\": \"color of the sky\", \"expected\": \"blue\"},\n    {\"q\": \"speed of light\", \"expected\": \"299,792 km/s\"},\n]\n\ndef run_eval(model):\n    passed = 0\n    for case in test_cases:\n        output = model(case[\"q\"])\n        ok = case[\"expected\"] in output.lower()   # simple code-based check\n        passed += ok\n        print(f\"  {'PASS' if ok else 'FAIL'}  {case['q']!r:22} -> {output}\")\n    return passed / len(test_cases)\n\nfor name, model in [(\"v1\", model_v1), (\"v2\", model_v2)]:\n    print(f\"Model {name}:\")\n    print(f\"  pass rate = {run_eval(model):.0%}\\n\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "define-success-and-build-test-sets",
+      "title": "Define success and build test sets",
+      "summary": "Measurable criteria; grading with code, people or a model.",
+      "resources": [
+        {
+          "title": "Claude docs: Define success criteria and build evaluations",
+          "url": "https://platform.claude.com/docs/en/test-and-evaluate/develop-tests",
+          "type": "docs",
+          "minutes": 15
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "Before you can test an app, you need to say what \"good\" means in a way you can measure. \"Write nice replies\" is too vague. \"Replies are valid JSON, mention the order number, and stay under 25 words\" is something you can check.",
+        "Good success criteria are **specific** and **measurable**. Think of a restaurant inspector with a checklist: fridge below 5 C, hands washed, floors clean. Each item is a yes/no or a number, so two inspectors would agree.",
+        "Your **test set** is a list of example inputs, ideally drawn from real users, plus what a good answer must contain. Include easy cases, tricky edge cases (empty input, very long input, other languages) and cases that broke before. Even 20 to 50 well-chosen examples is a strong start.",
+        "Pick the grader to fit each criterion. Exact facts and formats are best graded by **code**. Tone and helpfulness can be graded by **people**, or by an **LLM judge** once you have checked that it agrees with people. Scoring each criterion separately tells you exactly what to fix.",
+        "The code grades three outputs against three criteria and reports a pass rate per criterion, so you can see that JSON formatting is the weak spot."
+      ],
+      "keyIdeas": [
+        "Turn vague goals into specific, measurable criteria.",
+        "Build test sets from real inputs, edge cases and past failures.",
+        "Use code for facts and formats; people or a judge for tone and quality.",
+        "Score criteria separately so you know exactly what to fix."
+      ],
+      "quiz": [
+        {
+          "q": "Which is a measurable success criterion?",
+          "options": [
+            "Answers should feel friendly",
+            "Answers are under 50 words and mention the order ID",
+            "Answers should be really good"
+          ],
+          "answer": 1,
+          "explain": "A word limit and a required ID can be checked automatically and consistently."
+        },
+        {
+          "q": "What belongs in a good test set?",
+          "options": [
+            "Only the easiest examples so scores look high",
+            "Random words",
+            "Real inputs, edge cases and cases that failed before"
+          ],
+          "answer": 2,
+          "explain": "Realistic and tricky cases are what reveal problems before users do."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "grade_outputs.py",
+        "source": "# Turn vague goals (\"good summaries\") into checks a computer can score.\nimport json\n\n# Each test case: an input plus what a good output must satisfy\ntest_set = [\n    {\"input\": \"Refund request for order 1182\", \"must_include\": [\"refund\", \"1182\"], \"max_words\": 25},\n    {\"input\": \"Customer asks about shipping to Canada\", \"must_include\": [\"canada\"], \"max_words\": 25},\n    {\"input\": \"Angry email about a late delivery\", \"must_include\": [\"sorry\"], \"max_words\": 25},\n]\n\n# Pretend these came back from our model (asked to reply in JSON)\noutputs = [\n    '{\"reply\": \"We have started your refund for order 1182.\", \"tone\": \"friendly\"}',\n    '{\"reply\": \"Yes, we ship to Canada in 5-7 days.\", \"tone\": \"friendly\"}',\n    'Sorry about that! Your parcel is on its way and should arrive tomorrow, we promise.',\n]\n\ndef grade(case, raw):\n    scores = {}\n    try:                                   # criterion 1: valid JSON with a reply\n        reply = json.loads(raw)[\"reply\"]\n        scores[\"valid_json\"] = 1\n    except (ValueError, KeyError):\n        reply, scores[\"valid_json\"] = raw, 0\n    text = reply.lower()\n    scores[\"has_keywords\"] = int(all(k in text for k in case[\"must_include\"]))\n    scores[\"short_enough\"] = int(len(reply.split()) <= case[\"max_words\"])\n    return scores\n\ntotals = {}\nfor case, raw in zip(test_set, outputs):\n    s = grade(case, raw)\n    print(f\"{case['input'][:35]:37} {s}\")\n    for k, v in s.items():\n        totals[k] = totals.get(k, 0) + v\n\nprint(\"\\nPer-criterion pass rate:\")\nfor k, v in totals.items():\n    print(f\"  {k:13} {v}/{len(test_set)}\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "llm-as-a-judge",
+      "title": "LLM-as-a-judge",
+      "summary": "Rubrics, small scales, and checking the judge against people.",
+      "resources": [
+        {
+          "title": "Hugging Face Cookbook: LLM-as-a-Judge",
+          "url": "https://huggingface.co/learn/cookbook/llm_judge",
+          "type": "interactive",
+          "minutes": 25
+        },
+        {
+          "title": "Hamel Husain: LLM-as-a-Judge guide",
+          "url": "https://hamel.dev/blog/posts/llm-judge/",
+          "type": "article",
+          "minutes": 30
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "Some qualities are hard to check with code: is this answer helpful, polite, correct in spirit? **LLM-as-a-judge** means asking a second model to grade the output, using a written **rubric** that explains what each score means.",
+        "Keep the scale small. A 1-3 scale or a simple pass/fail is much more reliable than 1-10, because nobody (human or model) can say consistently what separates a 6 from a 7. Asking the judge to explain its reasoning before giving the score also helps.",
+        "A judge is a measuring tool, and tools need calibrating, like checking a kitchen scale with a known 1 kg bag of sugar. Have people label a small sample, run the judge on the same sample, and compare. If they often disagree, fix the rubric before trusting the judge.",
+        "Raw agreement can look good by luck, so people also use **Cohen's kappa**, which corrects for chance: 1 means perfect agreement and 0 means no better than guessing.",
+        "In the code, a stand-in judge scores eight answers. Comparing it to human labels shows where it goes wrong, such as rewarding a long but useless answer."
+      ],
+      "keyIdeas": [
+        "An LLM judge grades outputs using a clear written rubric.",
+        "Small scales (pass/fail or 1-3) are more reliable than 1-10.",
+        "Always compare the judge with human labels before trusting it.",
+        "Cohen's kappa measures agreement beyond what chance would give."
+      ],
+      "quiz": [
+        {
+          "q": "Why prefer a 1-3 scale over 1-10 for a judge?",
+          "options": [
+            "Small scales give more consistent, repeatable scores",
+            "Models cannot count past 3",
+            "It uses fewer GPUs"
+          ],
+          "answer": 0,
+          "explain": "Fewer, clearly defined levels make it easier to score the same way every time."
+        },
+        {
+          "q": "How do you know if your LLM judge can be trusted?",
+          "options": [
+            "Ask the judge if it is trustworthy",
+            "Use the biggest model available",
+            "Check its scores against human labels on a sample"
+          ],
+          "answer": 2,
+          "explain": "Agreement with people on a labeled sample is the evidence that the judge measures what you care about."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "check_judge.py",
+        "source": "# Check an LLM judge against human labels before trusting it.\nfrom sklearn.metrics import cohen_kappa_score\n\nRUBRIC = \"\"\"Score the answer 1-3:\n1 = wrong or unhelpful, 2 = partly correct, 3 = correct and complete.\"\"\"\n\ndef fake_judge(question, answer):\n    # Stand-in for an LLM call that would get RUBRIC + question + answer.\n    # Here: a crude heuristic so the demo runs offline.\n    if \"don't know\" in answer.lower():\n        return 1\n    return 3 if len(answer.split()) >= 6 else 2\n\nsamples = [\n    (\"What is RAG?\", \"Retrieval-augmented generation: fetch documents, then answer using them.\", 3),\n    (\"What is RAG?\", \"A kind of cloth.\", 1),\n    (\"What is an epoch?\", \"One full pass over the training data.\", 3),\n    (\"What is overfitting?\", \"When a model memorizes.\", 2),\n    (\"What is a token?\", \"I don't know.\", 1),\n    (\"What is a GPU?\", \"A chip that is very very very good at games.\", 1),\n    (\"What is LoRA?\", \"Training small low-rank adapter matrices.\", 3),\n    (\"What is a prompt?\", \"Text input.\", 2),\n]\n\njudge = [fake_judge(q, a) for q, a, _ in samples]\nhuman = [h for _, _, h in samples]\n\nfor (q, a, h), j in zip(samples, judge):\n    flag = \"\" if h == j else \"  <-- disagree\"\n    print(f\"human={h} judge={j}  {a[:40]}{flag}\")\n\nagree = sum(h == j for h, j in zip(human, judge)) / len(human)\nprint(f\"\\nRaw agreement: {agree:.0%}\")\nprint(f\"Cohen's kappa: {cohen_kappa_score(human, judge):.2f}  (1 = perfect, 0 = chance)\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "judge-pitfalls",
+      "title": "Judge pitfalls",
+      "summary": "Position, length and self-preference bias.",
+      "resources": [
+        {
+          "title": "Eugene Yan: Evaluating LLM-Evaluators",
+          "url": "https://eugeneyan.com/writing/llm-evaluators/",
+          "type": "article",
+          "minutes": 40
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "LLM judges have predictable blind spots. Knowing them is like knowing a referee tends to favor the home team: you can design around it.",
+        "**Position bias**: when comparing two answers, many judges favor whichever one is shown first (or second). The fix is to run the comparison twice with the order swapped and only count a win if both runs agree.",
+        "**Length bias** (also called verbosity bias): judges often prefer longer answers even when they are not better. Tell the rubric to ignore length, or compare answers of similar length. **Self-preference**: a model may rate text written by itself, or its own model family, more highly, so use a judge from a different family when you can.",
+        "Judges can also be inconsistent from run to run, and weak at checking facts they do not know. Give them the reference answer or source documents when correctness matters, and keep re-checking a sample against human labels.",
+        "The code simulates a judge with strong position bias. Swapping the order reveals that most of its verdicts flip, which means they were never trustworthy."
+      ],
+      "keyIdeas": [
+        "Position bias: judges may favor the first (or second) answer shown.",
+        "Swap the order and only trust verdicts that stay the same.",
+        "Length bias: longer is not better; tell the rubric to ignore length.",
+        "Self-preference: judges can favor their own outputs, so mix model families."
+      ],
+      "quiz": [
+        {
+          "q": "A judge picks answer A, then picks B when the order is swapped. What does this suggest?",
+          "options": [
+            "A is clearly better",
+            "Position bias; the verdict is unreliable",
+            "The answers are identical",
+            "The judge is broken and must be deleted"
+          ],
+          "answer": 1,
+          "explain": "If the winner changes with the order, the judge was reacting to position, not quality."
+        },
+        {
+          "q": "Which is a sensible guard against self-preference bias?",
+          "options": [
+            "Always use the same model to write and judge",
+            "Make answers longer",
+            "Use a judge from a different model family"
+          ],
+          "answer": 2,
+          "explain": "A judge from another family is less likely to favor the style of its own outputs."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "position_bias.py",
+        "source": "# Detect position bias: ask the judge twice with the answers swapped.\nimport random\nrandom.seed(0)\n\ndef biased_judge(answer_1, answer_2):\n    # Pretend LLM judge. It slightly prefers longer answers AND\n    # 70% of the time just picks whichever answer is shown first.\n    if random.random() < 0.7:\n        return 1\n    return 1 if len(answer_1) >= len(answer_2) else 2\n\npairs = [\n    (\"Paris.\", \"The capital of France is Paris.\"),\n    (\"Water boils at 100 C at sea level.\", \"Water boils at 90 C.\"),\n    (\"7 x 8 = 56\", \"7 x 8 = 54, I think, roughly.\"),\n    (\"Python is a programming language.\", \"A snake.\"),\n    (\"Yes.\", \"Yes, the Earth orbits the Sun once a year.\"),\n    (\"Use a list.\", \"Use a dictionary keyed by user id for fast lookup.\"),\n]\n\nconsistent = 0\nfor a, b in pairs:\n    first = biased_judge(a, b)                # a shown first\n    second = biased_judge(b, a)               # b shown first\n    winner_1 = a if first == 1 else b\n    winner_2 = b if second == 1 else a\n    same = winner_1 == winner_2\n    consistent += same\n    print(f\"{'OK  ' if same else 'FLIP'} run1 -> {winner_1[:28]!r:32} run2 -> {winner_2[:28]!r}\")\n\nprint(f\"\\nConsistent verdicts: {consistent}/{len(pairs)}\")\nprint(\"Fix: judge both orders and only count a win when both runs agree.\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "when-and-how-to-fine-tune",
+      "title": "When and how to fine-tune",
+      "summary": "Fine-tuning vs prompting or RAG, and supervised fine-tuning basics.",
+      "resources": [
+        {
+          "title": "Hugging Face: Supervised Fine-Tuning",
+          "url": "https://huggingface.co/learn/llm-course/chapter11/1",
+          "type": "course",
+          "minutes": 30
+        },
+        {
+          "title": "DeepLearning.AI: Finetuning Large Language Models",
+          "url": "https://www.deeplearning.ai/short-courses/finetuning-large-language-models/",
+          "type": "course",
+          "minutes": 95
+        }
+      ],
+      "minutes": 35,
+      "body": [
+        "**Fine-tuning** means continuing to train a model on your own examples so it changes its default behavior. It is powerful, but it should usually be your last step, not your first.",
+        "Try the cheaper options first. **Prompting** (clear instructions and a few examples) fixes most problems in minutes. **RAG** is the right tool when the model lacks knowledge, such as your company documents. Fine-tuning shines when you need a consistent style or format, a narrow task done cheaply by a small model, or behavior that is hard to describe in words.",
+        "Think of it like training a new employee. A prompt is a sticky note with instructions; RAG is handing them the manual; fine-tuning is weeks of practice until the habit sticks. Practice is great for habits, but a bad way to memorize facts that change every week.",
+        "**Supervised fine-tuning (SFT)** uses pairs of input and ideal output, usually written as chat messages. The text is formatted with the model's chat template, and the loss is typically computed only on the assistant's reply, so the model learns what to say rather than how to repeat the question. Quality beats quantity: a few hundred clean, consistent examples often beat thousands of messy ones.",
+        "The code shows the data side of SFT: building chat examples, holding back a validation set, and marking which part of each example the model actually learns from."
+      ],
+      "keyIdeas": [
+        "Try prompting first, RAG for missing knowledge, fine-tuning last.",
+        "Fine-tuning is best for style, format and narrow repeated tasks.",
+        "SFT trains on input/ideal-output pairs, often as chat messages.",
+        "A few hundred clean examples can beat thousands of messy ones."
+      ],
+      "quiz": [
+        {
+          "q": "Your bot needs to answer questions about policies that change weekly. Best first choice?",
+          "options": [
+            "Fine-tune every week",
+            "RAG over the current policy documents",
+            "Train a model from scratch"
+          ],
+          "answer": 1,
+          "explain": "RAG gives the model up-to-date facts without retraining whenever the documents change."
+        },
+        {
+          "q": "In supervised fine-tuning, which tokens usually count toward the loss?",
+          "options": [
+            "Only the system prompt",
+            "Every token equally, including the user question",
+            "Mostly the assistant's reply",
+            "None, SFT has no loss"
+          ],
+          "answer": 2,
+          "explain": "Masking the prompt makes the model learn to produce good answers, not to copy the question."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "sft_data.py",
+        "source": "# Prepare supervised fine-tuning (SFT) data: chat examples -> training text.\nimport random\n\nexamples = [\n    (\"Summarize: The meeting moved to Friday at 3pm.\", \"Meeting now Friday, 3pm.\"),\n    (\"Summarize: Our server will be down Sunday for upgrades.\", \"Server down Sunday (upgrades).\"),\n    (\"Summarize: Lunch is provided for everyone on Tuesday.\", \"Free lunch Tuesday.\"),\n    (\"Summarize: Please submit expense reports by the 30th.\", \"Expenses due the 30th.\"),\n    (\"Summarize: The office is closed on public holidays.\", \"Office closed on holidays.\"),\n]\n\ndef to_chat(prompt, answer):\n    # The same \"messages\" format most fine-tuning tools accept\n    return [{\"role\": \"system\", \"content\": \"You write very short summaries.\"},\n            {\"role\": \"user\", \"content\": prompt},\n            {\"role\": \"assistant\", \"content\": answer}]\n\ndef render(messages):\n    # A simple chat template. Real models each have their own template.\n    return \"\".join(f\"<|{m['role']}|>{m['content']}<|end|>\" for m in messages)\n\nrandom.seed(1)\nrandom.shuffle(examples)\ntrain, val = examples[:4], examples[4:]          # always hold some data back\nprint(f\"train={len(train)}  val={len(val)}\\n\")\n\ntext = render(to_chat(*train[0]))\nprint(\"One training example:\\n\", text, \"\\n\")\n\n# In SFT the loss is usually computed only on the assistant's reply:\nstart = text.index(\"<|assistant|>\") + len(\"<|assistant|>\")\nprint(\"Ignored by the loss :\", text[:start][:60], \"...\")\nprint(\"Model learns to say :\", text[start:])\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "lora-and-peft",
+      "title": "LoRA and PEFT",
+      "summary": "Train a tiny slice of the weights with low-rank adapters.",
+      "resources": [
+        {
+          "title": "Sebastian Raschka: Finetuning With LoRA",
+          "url": "https://sebastianraschka.com/blog/2023/llm-finetuning-lora.html",
+          "type": "article",
+          "minutes": 20
+        },
+        {
+          "title": "Hugging Face PEFT: LoRA guide",
+          "url": "https://huggingface.co/docs/peft/main/en/conceptual_guides/lora",
+          "type": "docs",
+          "minutes": 10
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "Large models have billions of weights. Updating all of them (full fine-tuning) needs lots of GPU memory and produces a full-size copy of the model for every task. **PEFT** (parameter-efficient fine-tuning) trains only a tiny extra piece instead.",
+        "The most popular PEFT method is **LoRA** (low-rank adaptation). The original weight matrix `W` is frozen. Next to it, LoRA adds two thin matrices, `B` and `A`, and the layer uses `W + B @ A`. If `W` is 4096 x 4096 and the rank is 8, you train about 65 thousand numbers instead of 16.7 million.",
+        "Why does this work? The changes needed to adapt a model to a new task tend to be simple, so they can be described by a **low-rank** matrix. It is like editing a huge photo with a small filter layer rather than repainting every pixel.",
+        "`B` starts at zero, so at first the model behaves exactly like the original. After training you can keep the adapter as a small separate file (megabytes, not gigabytes), swap adapters for different tasks, or merge it into `W`. **QLoRA** goes further by storing the frozen base model in 4-bit precision to save even more memory.",
+        "The code builds LoRA from scratch in NumPy: a frozen matrix, two small trainable ones, and gradient descent that learns the new skill while training about 3% of the numbers."
+      ],
+      "keyIdeas": [
+        "PEFT trains a small add-on instead of all model weights.",
+        "LoRA freezes W and learns a low-rank update B @ A.",
+        "Adapters are tiny files you can swap or merge into the base model.",
+        "QLoRA adds a 4-bit frozen base model to cut memory further."
+      ],
+      "quiz": [
+        {
+          "q": "In LoRA, what happens to the original weight matrix W during training?",
+          "options": [
+            "It is frozen and not updated",
+            "It is deleted",
+            "It is replaced by A",
+            "It is trained at a higher learning rate"
+          ],
+          "answer": 0,
+          "explain": "Only the small matrices A and B are trained; W stays exactly as it was."
+        },
+        {
+          "q": "Why does LoRA usually start B at zero?",
+          "options": [
+            "To make training impossible",
+            "So the adapted model starts out identical to the original",
+            "Because zero uses less disk space"
+          ],
+          "answer": 1,
+          "explain": "With B = 0, B @ A = 0, so training begins from the pretrained model's behavior."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "lora_numpy.py",
+        "source": "# LoRA in NumPy: instead of updating a big matrix W, learn W + B @ A\nimport numpy as np\nrng = np.random.default_rng(0)\n\nd, r = 256, 4                        # layer size and LoRA rank\nW = rng.normal(size=(d, d)) / np.sqrt(d)          # frozen pretrained weights\ntrue_delta = rng.normal(size=(d, r)) @ rng.normal(size=(r, d)) / d  # the \"new skill\"\n\nX = rng.normal(size=(512, d))        # training inputs\nY = X @ (W + true_delta).T           # targets from the adapted layer\n\nA = rng.normal(size=(r, d)) * 0.01   # LoRA: A starts small and random,\nB = np.zeros((d, r))                 # B starts at zero, so W is unchanged at first\n\nlr = 0.1\nfor step in range(201):\n    pred = X @ (W + B @ A).T         # W itself is never updated\n    err = pred - Y\n    loss = (err ** 2).mean()\n    grad_delta = err.T @ X / len(X)  # gradient w.r.t. the full update (d x d)\n    grad_B, grad_A = grad_delta @ A.T, B.T @ grad_delta\n    B -= lr * grad_B\n    A -= lr * grad_A\n    if step % 40 == 0:\n        print(f\"step {step:3}  loss {loss:.2e}\")\n\nprint(f\"\\nFull fine-tune would train {W.size:,} numbers\")\nprint(f\"LoRA trains only           {A.size + B.size:,} numbers \"\n      f\"({(A.size + B.size) / W.size:.1%})\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "hands-on-fine-tune-a-small-model",
+      "title": "Hands-on: fine-tune a small model",
+      "summary": "Train with TRL's SFTTrainer and a LoRA config.",
+      "resources": [
+        {
+          "title": "Hugging Face TRL: SFT Trainer",
+          "url": "https://huggingface.co/docs/trl/sft_trainer",
+          "type": "docs",
+          "minutes": 20
+        }
+      ],
+      "minutes": 40,
+      "body": [
+        "Now let's see what a real fine-tuning run looks like. Hugging Face's **TRL** library has an `SFTTrainer` that handles the training loop, and the **PEFT** library provides `LoraConfig` for adapters. Together they turn fine-tuning into roughly 20 lines of code.",
+        "You need three ingredients: a **base model** (a small one like Qwen2.5-0.5B fits on a free Colab GPU), a **dataset** in chat \"messages\" format, and a **LoRA config** that sets the rank `r`, the scaling `lora_alpha`, and which layers get adapters (`all-linear` is a simple, strong default).",
+        "While it trains, watch the loss. It should drop and then level off. If the training loss keeps falling but your validation loss rises, the model is memorizing your examples (overfitting): use fewer epochs or more varied data.",
+        "Afterwards, do not just trust the falling loss. Run your eval set from earlier lessons on the base model and on the fine-tuned model, side by side. Fine-tuning only counts as a win if the eval score goes up on the task you care about without breaking other behavior.",
+        "The code below needs a GPU and downloads a model and dataset, so it will not run in the browser. Copy it into Google Colab with a GPU runtime to try it."
+      ],
+      "keyIdeas": [
+        "TRL's SFTTrainer plus a PEFT LoraConfig fine-tunes in a few lines.",
+        "Start with a small model and a chat-formatted dataset.",
+        "Watch training and validation loss to spot overfitting.",
+        "Prove the win with your eval set, not just a lower loss."
+      ],
+      "quiz": [
+        {
+          "q": "Training loss keeps falling but validation loss starts rising. What is happening?",
+          "options": [
+            "The model is overfitting to the training examples",
+            "Training is going perfectly",
+            "The GPU is too fast"
+          ],
+          "answer": 0,
+          "explain": "Rising validation loss means the model is memorizing rather than generalizing."
+        },
+        {
+          "q": "What is the best evidence that your fine-tune worked?",
+          "options": [
+            "The training loss reached a low number",
+            "The adapter file is small",
+            "The output looks different",
+            "Its score on your eval set beats the base model"
+          ],
+          "answer": 3,
+          "explain": "Only an eval on your real task shows whether behavior actually improved."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "sft_lora.py",
+        "source": "# pip install trl peft datasets\nfrom datasets import load_dataset\nfrom peft import LoraConfig\nfrom trl import SFTConfig, SFTTrainer\n\n# A chat dataset in the \"messages\" format\ndataset = load_dataset(\"trl-lib/Capybara\", split=\"train\")\n\n# LoRA: train small adapter matrices instead of all weights\npeft_config = LoraConfig(\n    r=16,                       # rank of the adapters\n    lora_alpha=32,              # scaling factor\n    target_modules=\"all-linear\",\n    task_type=\"CAUSAL_LM\",\n)\n\ntrainer = SFTTrainer(\n    model=\"Qwen/Qwen2.5-0.5B\",  # a small model that fits a free Colab GPU\n    train_dataset=dataset,\n    args=SFTConfig(output_dir=\"qwen-sft-lora\", num_train_epochs=1),\n    peft_config=peft_config,\n)\ntrainer.train()\ntrainer.save_model()            # saves just the small LoRA adapter\n",
+        "runnable": false,
+        "note": "Needs a GPU and downloads a model, so run it in Google Colab (GPU runtime) or on your own machine."
+      }
+    }
+  ]
+}

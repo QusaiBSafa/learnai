@@ -1,0 +1,421 @@
+{
+  "slug": "prompt-engineering",
+  "title": "Prompt Engineering",
+  "short": "Prompting",
+  "level": "Beginner",
+  "blurb": "Write prompts that get reliable, well-formatted answers, and test them like a pro. The quickest win on the roadmap.",
+  "stage": "foundations",
+  "order": 3,
+  "lessons": [
+    {
+      "slug": "what-a-prompt-is-and-how-to-iterate",
+      "title": "What a prompt is and how to iterate",
+      "summary": "Define success first, then draft, test and refine.",
+      "resources": [
+        {
+          "title": "Anthropic: Prompt engineering overview",
+          "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+          "type": "docs",
+          "minutes": 10
+        }
+      ],
+      "minutes": 20,
+      "body": [
+        "A **prompt** is everything you send to the model: your instructions, any background, examples and the data to work on. The model has no other window into what you want, so the prompt is your whole briefing, like a note left for a very capable new colleague who knows nothing about your project.",
+        "Before writing the prompt, **decide what success looks like**. \"A good summary\" is vague; \"three bullet points, under 50 words, no jargon\" is something you can check. Clear success criteria tell you when you are done and stop you from tweaking forever.",
+        "Then **iterate**: write a first draft, try it on a few realistic inputs, look at where the output misses your criteria, and change one thing at a time. Prompting is closer to cooking than to writing a contract: taste, adjust, taste again.",
+        "Keep the inputs you test with, especially the ones that caused trouble. Re-running them after each change shows whether you actually improved things or just fixed one case while breaking another."
+      ],
+      "keyIdeas": [
+        "The prompt is the model's only briefing, so include what it needs.",
+        "Define checkable success criteria before you start.",
+        "Draft, test on real inputs, change one thing, repeat.",
+        "Keep a set of test inputs and re-run them after each change."
+      ],
+      "quiz": [
+        {
+          "q": "What should you do before writing a prompt?",
+          "options": [
+            "Pick the longest possible wording",
+            "Decide how you will judge a good output",
+            "Ask the model to write it for you"
+          ],
+          "answer": 1,
+          "explain": "Clear success criteria tell you what to aim for and when you are done."
+        },
+        {
+          "q": "Your prompt fails on one input. What is the best next step?",
+          "options": [
+            "Give up on prompting",
+            "Rewrite everything at once",
+            "Change one thing, then re-test all your saved inputs",
+            "Only test that one input from now on"
+          ],
+          "answer": 2,
+          "explain": "Small changes re-tested on all inputs show what actually helped without breaking other cases."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "iterate.py",
+        "source": "# A pretend model, so this runs without an API key. It reacts to wording\n# a bit like a real one: vague in, vague out.\ndef fake_llm(prompt):\n    if \"one sentence\" in prompt and \"for a 10-year-old\" in prompt:\n        return \"Plants use sunlight to turn air and water into their own food.\"\n    if \"one sentence\" in prompt:\n        return \"Photosynthesis converts light energy into chemical energy in chloroplasts.\"\n    return (\"Photosynthesis is a complex process. It has light reactions and the \"\n            \"Calvin cycle. Chlorophyll absorbs light. There is a lot more to say...\")\n\n# Step 1: define success BEFORE writing the prompt.\ndef check(answer):\n    return {\n        \"one sentence\": answer.count(\".\") == 1,\n        \"under 15 words\": len(answer.split()) < 15,\n        \"no jargon\": not any(w in answer for w in [\"chloroplast\", \"Calvin\", \"chemical\"]),\n    }\n\n# Step 2: draft, test, refine.\nprompts = [\n    \"Explain photosynthesis.\",\n    \"Explain photosynthesis in one sentence.\",\n    \"Explain photosynthesis in one sentence for a 10-year-old.\",\n]\nfor version, prompt in enumerate(prompts, start=1):\n    results = check(fake_llm(prompt))\n    passed = sum(results.values())\n    print(f\"v{version}: {passed}/3 checks passed  {results}\")\n",
+        "runnable": true,
+        "note": "fake_llm stands in for a real model so you can see the test-and-refine loop."
+      }
+    },
+    {
+      "slug": "be-clear-specific-and-give-context",
+      "title": "Be clear, specific and give context",
+      "summary": "Explicit instructions, a role, and the background the model needs.",
+      "resources": [
+        {
+          "title": "Anthropic: Prompting best practices",
+          "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#be-clear-and-direct",
+          "type": "docs",
+          "minutes": 20
+        },
+        {
+          "title": "Google Gemini: Prompt design strategies",
+          "url": "https://ai.google.dev/gemini-api/docs/prompting-strategies",
+          "type": "docs",
+          "minutes": 25
+        }
+      ],
+      "minutes": 20,
+      "body": [
+        "Models are good at following instructions but cannot read your mind. Imagine handing the task to a smart new hire on their first day: they need to know **what** to do, **who** it is for, **why** it matters and **what good looks like**. Anything you leave out, the model will guess.",
+        "Be **explicit**. Instead of \"write something about our app\", say what kind of text, how long, what tone, what to include and what to avoid. If you want a specific format, like a subject line then a body, say so directly.",
+        "Give **context**: the audience, the purpose and any background facts. Telling the model \"our readers are busy parents\" changes its word choice far more than \"make it good\". Explaining the reason behind a rule also helps it handle cases you did not think of.",
+        "A **role** can help set the voice and expertise, for example \"You are a friendly copywriter for a fitness startup\" or \"You are an experienced tax accountant\". In chat APIs this often goes in the **system prompt**, the standing instructions that apply to the whole conversation."
+      ],
+      "keyIdeas": [
+        "Brief the model like a smart new colleague with no background.",
+        "Spell out task, length, tone, format and what to avoid.",
+        "Give context: audience, purpose and why the rules exist.",
+        "A role or system prompt sets voice and expertise."
+      ],
+      "quiz": [
+        {
+          "q": "Which prompt is clearest?",
+          "options": [
+            "Write an email to customers about our app, under 100 words, friendly tone, mention it is free",
+            "Write an email.",
+            "Make it good."
+          ],
+          "answer": 0,
+          "explain": "It states the task, audience, length, tone and key content."
+        },
+        {
+          "q": "Why explain the reason behind an instruction?",
+          "options": [
+            "It makes the prompt shorter",
+            "It is required by the API",
+            "Models ignore instructions without reasons",
+            "It helps the model handle cases you did not foresee"
+          ],
+          "answer": 3,
+          "explain": "Knowing the goal lets the model apply the rule sensibly to new situations."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "clear_prompt.py",
+        "source": "# Compare a vague prompt with a clear one built from labeled parts.\nvague = \"Write something about our new app.\"\n\ndef build_prompt(role, context, task, details, output_format):\n    return \"\\n\\n\".join([\n        role,\n        \"Background: \" + context,\n        \"Task: \" + task,\n        \"Requirements:\\n\" + \"\\n\".join(f\"- {d}\" for d in details),\n        \"Format: \" + output_format,\n    ])\n\nclear = build_prompt(\n    role=\"You are a friendly copywriter for a small fitness startup.\",\n    context=\"We are launching StepPal, a free app that turns daily walks \"\n            \"into small challenges. Our users are busy parents aged 30-45.\",\n    task=\"Write the announcement email for our existing newsletter readers.\",\n    details=[\"Under 120 words\",\n             \"Warm, upbeat tone, no hype words like 'revolutionary'\",\n             \"Mention it is free and works offline\",\n             \"End with one clear call to action: download from the app store\"],\n    output_format=\"A subject line, then the email body.\",\n)\n\nprint(\"VAGUE PROMPT:\\n\" + vague)\nprint(\"\\nCLEAR PROMPT:\\n\" + clear)\nprint(f\"\\nThe clear prompt answers: who, what, for whom, how long, what tone, \"\n      f\"what format. ({len(clear.split())} words vs {len(vague.split())})\")\n",
+        "runnable": true,
+        "note": "Prints a vague prompt next to a clear one, so you can paste the clear one into any chatbot."
+      }
+    },
+    {
+      "slug": "few-shot-prompting",
+      "title": "Few-shot prompting",
+      "summary": "Show the model examples of the input and output you want.",
+      "resources": [
+        {
+          "title": "Prompt Engineering Guide: Few-shot prompting",
+          "url": "https://www.promptingguide.ai/techniques/fewshot",
+          "type": "article",
+          "minutes": 8
+        },
+        {
+          "title": "OpenAI: Prompt engineering guide",
+          "url": "https://developers.openai.com/api/docs/guides/prompt-engineering",
+          "type": "docs",
+          "minutes": 25
+        }
+      ],
+      "minutes": 20,
+      "body": [
+        "**Few-shot prompting** means showing the model a few worked examples of input and output before giving it the real input. **Zero-shot** means no examples, just instructions. Examples are often the fastest way to get exactly the format and style you want.",
+        "It works like showing a new colleague two or three finished forms before asking them to fill one in. They copy the pattern: the labels you used, the length, the tone, even small details like capital letters and punctuation.",
+        "Choose examples carefully. Make them **realistic**, cover the **variety** you expect (including tricky or edge cases), and keep them **consistent** in format. Wrap them in clear markers like `<example>` tags so the model does not confuse them with the real input.",
+        "Watch out for accidental patterns. If every example is positive, or every answer starts the same way, the model may copy that too. Three to five varied examples is a good starting point."
+      ],
+      "keyIdeas": [
+        "Few-shot means giving worked examples; zero-shot means none.",
+        "The model copies the format, style and labels it sees.",
+        "Use realistic, varied, consistent examples with clear markers.",
+        "Avoid accidental patterns the model might copy."
+      ],
+      "quiz": [
+        {
+          "q": "What is few-shot prompting?",
+          "options": [
+            "Sending a very short prompt",
+            "Including a few input-output examples in the prompt",
+            "Asking the model several times",
+            "Using a smaller model"
+          ],
+          "answer": 1,
+          "explain": "Few-shot prompts show worked examples so the model can copy the pattern."
+        },
+        {
+          "q": "All your examples are labeled \"positive\". What might go wrong?",
+          "options": [
+            "The model may lean toward answering positive",
+            "Nothing, labels do not matter",
+            "The model will refuse to answer"
+          ],
+          "answer": 0,
+          "explain": "Models pick up patterns in the examples, including unintended ones."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "few_shot.py",
+        "source": "# Build a few-shot prompt: a few worked examples, then the new input.\nexamples = [\n    (\"The delivery was two days late and the box was crushed.\", \"negative\"),\n    (\"Exactly what I needed, works perfectly!\", \"positive\"),\n    (\"It arrived on Tuesday.\", \"neutral\"),\n]\n\ndef few_shot_prompt(new_review):\n    parts = [\"Classify the sentiment of each review as positive, negative or neutral.\\n\"]\n    for text, label in examples:\n        parts.append(f\"<review>{text}</review>\\nSentiment: {label}\\n\")\n    parts.append(f\"<review>{new_review}</review>\\nSentiment:\")\n    return \"\\n\".join(parts)\n\nprompt = few_shot_prompt(\"Battery died after one week. Very disappointed.\")\nprint(prompt)\n\n# With chat APIs you can also send examples as earlier turns of a conversation:\nmessages = []\nfor text, label in examples:\n    messages.append({\"role\": \"user\", \"content\": text})\n    messages.append({\"role\": \"assistant\", \"content\": label})\nmessages.append({\"role\": \"user\", \"content\": \"Love it, buying another one.\"})\nprint(f\"\\nAs chat messages: {len(messages)} messages, last one:\", messages[-1])\n",
+        "runnable": true,
+        "note": "Builds a few-shot prompt as plain text and as chat messages; paste either into a model."
+      }
+    },
+    {
+      "slug": "structure-prompts-and-format-outputs",
+      "title": "Structure prompts and format outputs",
+      "summary": "XML or Markdown sections, data kept apart from instructions, structured output.",
+      "resources": [
+        {
+          "title": "Anthropic: Structure prompts with XML tags",
+          "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#structure-prompts-with-xml-tags",
+          "type": "docs",
+          "minutes": 10
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "Long prompts are easier for models (and people) to follow when they have clear sections. Wrapping parts in **XML-style tags** like `<email>...</email>` and `<instructions>...</instructions>`, or using Markdown headings, shows exactly where each part starts and ends.",
+        "Keep **data separate from instructions**. If you paste a document or email straight into your instructions, the model can mix them up, or even follow instructions hidden inside the data. Putting the data in its own tagged block and then referring to it (\"the email in the email tags\") keeps things clean.",
+        "Ask for the **output format** you need, especially if code will read the answer. \"Return only a JSON object with the keys name, order_id and request\" gives you something you can load with `json.loads()` and use directly. Showing an example of the exact output shape helps even more.",
+        "Many model APIs also offer **structured output** or tool features that guarantee valid JSON matching a schema you provide. Even so, have your code check the result, for example that all required keys are present, before trusting it."
+      ],
+      "keyIdeas": [
+        "Use XML tags or Markdown sections to organize long prompts.",
+        "Keep pasted data in its own block, apart from instructions.",
+        "Ask for an exact output format, like JSON with named keys.",
+        "Validate structured output in code before using it."
+      ],
+      "quiz": [
+        {
+          "q": "Why put a pasted document inside its own tags?",
+          "options": [
+            "Tags make the model faster",
+            "It is the only way to send text",
+            "It keeps the data clearly apart from your instructions"
+          ],
+          "answer": 2,
+          "explain": "Separating data from instructions avoids mix-ups and makes the prompt easier to follow."
+        },
+        {
+          "q": "Your code needs to read the model's answer. What should you ask for?",
+          "options": [
+            "A friendly paragraph",
+            "A specific format such as JSON with named keys",
+            "As many words as possible",
+            "An answer in capital letters"
+          ],
+          "answer": 1,
+          "explain": "A fixed, machine-readable format lets your code parse the result reliably."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "structured.py",
+        "source": "import json\n\n# Keep instructions and data apart, using XML-style tags.\nemail = \"\"\"Hi, I'm Maria Lopez. My order #4521 never arrived and I'd like\na refund please. You can reach me at maria@example.com.\"\"\"\n\nprompt = f\"\"\"Extract details from the customer email inside <email> tags.\n\n<email>\n{email}\n</email>\n\n<instructions>\nReturn ONLY a JSON object with the keys: name, order_id, request, email.\nUse null for anything that is missing.\n</instructions>\"\"\"\nprint(prompt)\n\n# Pretend this is what the model replied:\nreply = '{\"name\": \"Maria Lopez\", \"order_id\": \"4521\", \"request\": \"refund\", \"email\": \"maria@example.com\"}'\n\n# Structured output means your code can use the answer directly.\ndata = json.loads(reply)\nrequired = {\"name\", \"order_id\", \"request\", \"email\"}\nmissing = required - data.keys()\nprint(\"\\nParsed OK. Missing keys:\", missing or \"none\")\nprint(f\"Refund ticket for {data['name']} on order {data['order_id']}\")\n",
+        "runnable": true,
+        "note": "The model reply is pasted in, so the parsing step runs without an API key."
+      }
+    },
+    {
+      "slug": "step-by-step-reasoning",
+      "title": "Step-by-step reasoning",
+      "summary": "Ask the model to think before it answers (chain of thought).",
+      "resources": [
+        {
+          "title": "Prompt Engineering Guide: Chain-of-Thought",
+          "url": "https://www.promptingguide.ai/techniques/cot",
+          "type": "article",
+          "minutes": 10
+        }
+      ],
+      "minutes": 20,
+      "body": [
+        "For problems with several steps, like maths, logic or weighing options, models do better when they **think before they answer**. This is called **chain of thought**: asking the model to write out its reasoning first, then give the result.",
+        "It helps because the model generates one token at a time. Writing out intermediate steps gives it room to work things through, like doing long division on paper instead of in your head. The simplest version is adding \"Think step by step\" to your prompt.",
+        "A more useful pattern is to ask for the reasoning and the answer in **separate tags**, such as `<thinking>` and `<answer>`. Your code can then show only the answer to users while you still read the reasoning to spot where things go wrong.",
+        "Many newer models have a built-in **extended thinking** or reasoning mode that does this automatically. Chain of thought costs more tokens and time, so save it for tasks that need it; a simple lookup or rewrite usually does not."
+      ],
+      "keyIdeas": [
+        "Chain of thought: ask the model to reason before answering.",
+        "Writing out steps gives the model room to work things through.",
+        "Use separate tags for reasoning and the final answer.",
+        "It costs more tokens, so use it for multi-step problems."
+      ],
+      "quiz": [
+        {
+          "q": "When is step-by-step reasoning most helpful?",
+          "options": [
+            "Translating a single word",
+            "A word problem that needs several calculations",
+            "Fixing a typo"
+          ],
+          "answer": 1,
+          "explain": "Multi-step problems benefit most from working through the steps first."
+        },
+        {
+          "q": "Why ask for the reasoning inside <thinking> tags and the result inside <answer> tags?",
+          "options": [
+            "So code can easily pull out just the final answer",
+            "Tags make the answer more correct on their own",
+            "The model refuses otherwise",
+            "To use fewer tokens"
+          ],
+          "answer": 0,
+          "explain": "Clear tags let your code separate the reasoning from the answer you show users."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "think_then_answer.py",
+        "source": "import re\n\nquestion = (\"A cafe sells muffins for $3 each, or 4 for $10. \"\n            \"What is the cheapest way to buy 6 muffins?\")\n\nprompt = f\"\"\"{question}\n\nThink it through step by step inside <thinking> tags.\nThen give only the final answer inside <answer> tags.\"\"\"\nprint(prompt)\n\n# Pretend this is the model's reply:\nreply = \"\"\"<thinking>\nOption 1: 6 single muffins = 6 x $3 = $18.\nOption 2: one 4-pack ($10) + 2 singles ($6) = $16.\nTwo 4-packs give 8 muffins for $20, which costs more.\nSo the 4-pack plus 2 singles is cheapest.\n</thinking>\n<answer>Buy one 4-pack and 2 single muffins, for $16.</answer>\"\"\"\n\n# Separating thinking from the answer lets your code show only the answer.\nthinking = re.search(r\"<thinking>(.*?)</thinking>\", reply, re.S).group(1).strip()\nanswer = re.search(r\"<answer>(.*?)</answer>\", reply, re.S).group(1).strip()\nprint(\"\\nReasoning lines:\", len(thinking.splitlines()))\nprint(\"Final answer:\", answer)\n",
+        "runnable": true,
+        "note": "Shows how to separate the model's reasoning from its final answer with tags."
+      }
+    },
+    {
+      "slug": "hands-on-practice",
+      "title": "Hands-on practice",
+      "summary": "Exercises on roles, examples, avoiding hallucinations and complex prompts.",
+      "resources": [
+        {
+          "title": "Anthropic Prompt Engineering Interactive Tutorial",
+          "url": "https://github.com/anthropics/prompt-eng-interactive-tutorial",
+          "type": "interactive",
+          "minutes": 180
+        },
+        {
+          "title": "DeepLearning.AI: Prompt Engineering for Developers",
+          "url": "https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/",
+          "type": "course",
+          "minutes": 100
+        }
+      ],
+      "minutes": 40,
+      "body": [
+        "The best way to learn prompting is to do it. This lesson's resource is a set of interactive exercises covering roles, examples, avoiding hallucinations and building complex prompts. Work through them with a real chatbot open and try your own variations.",
+        "One of the most practical skills is **reducing hallucinations**. Give the model the source document, tell it to answer only from that document, and explicitly allow it to say \"I don't know\". Models are much less likely to invent things when admitting ignorance is clearly allowed.",
+        "Another strong technique is asking the model to **quote first**: copy the exact sentences that support its answer, then answer. Quotes are easy to check, by you or by code, so invented answers become easy to catch.",
+        "For **complex prompts**, combine everything: a role, clear context, the data in tags, a few examples, step-by-step thinking and an exact output format. Build them up piece by piece and test as you go, rather than writing a giant prompt in one shot."
+      ],
+      "keyIdeas": [
+        "Practise with real exercises and your own variations.",
+        "Allow \"I don't know\" and answer only from given sources.",
+        "Ask for supporting quotes first; they are easy to verify.",
+        "Build complex prompts piece by piece, testing each step."
+      ],
+      "quiz": [
+        {
+          "q": "Which instruction most directly reduces made-up answers?",
+          "options": [
+            "Answer in a confident tone",
+            "Use as many details as possible",
+            "Answer only from the document, and say \"I don't know\" if it is not there"
+          ],
+          "answer": 2,
+          "explain": "Grounding in a source and allowing \"I don't know\" removes the pressure to invent."
+        },
+        {
+          "q": "Why ask the model to quote supporting sentences before answering?",
+          "options": [
+            "Quotes make the answer longer",
+            "Quotes can be checked against the source",
+            "Quotes stop the model from thinking",
+            "It is required for JSON output"
+          ],
+          "answer": 1,
+          "explain": "Exact quotes are easy to verify, so unsupported answers stand out."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "grounded_answers.py",
+        "source": "import re\n\n# Exercise: stop the model from making things up about a document.\ndocument = \"\"\"StepPal is a walking app launched in March 2024.\nIt is free, works offline, and is available on Android and iOS.\nIt has 50,000 users.\"\"\"\n\nprompt = f\"\"\"<document>\n{document}\n</document>\n\nAnswer the question using ONLY the document. First copy the exact sentence(s)\nthat support your answer inside <quote> tags. If the document does not contain\nthe answer, reply exactly: \"I don't know based on this document.\"\n\nQuestion: Who founded StepPal?\"\"\"\nprint(prompt, \"\\n\")\n\n# Two possible replies a model might give:\nreplies = {\n    \"made up\": '<quote>StepPal was founded by Jo Kim.</quote> Jo Kim founded it.',\n    \"honest\": \"I don't know based on this document.\",\n}\n\n# Check: every quote must really appear in the document.\nfor name, reply in replies.items():\n    quotes = re.findall(r\"<quote>(.*?)</quote>\", reply)\n    fake = [q for q in quotes if q not in document]\n    verdict = \"FLAG: quote not in document\" if fake else \"OK, nothing invented\"\n    print(f\"{name:8} -> {len(quotes)} quote(s), {verdict}\")\n",
+        "runnable": true,
+        "note": "Checks that every quote a model gives really appears in the source document."
+      }
+    },
+    {
+      "slug": "testing-your-prompts",
+      "title": "Testing your prompts",
+      "summary": "Success criteria, and grading outputs with code, a model or a person.",
+      "resources": [
+        {
+          "title": "Anthropic: Define success criteria and build evaluations",
+          "url": "https://platform.claude.com/docs/en/test-and-evaluate/develop-tests",
+          "type": "docs",
+          "minutes": 20
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "Trying a prompt on one or two inputs and thinking \"looks good\" is not enough. An **evaluation** (eval) is a set of test cases with expected results, so you can measure how well a prompt works and compare versions with a number instead of a feeling.",
+        "Start with clear **success criteria** that are specific and measurable, such as \"labels sentiment correctly on 95% of reviews\" or \"answers in under 100 words\". Then collect test cases that look like real inputs, including the tricky and unusual ones.",
+        "There are three ways to grade outputs. **Code-based grading** (exact match, contains a keyword, valid JSON, length) is fast and cheap. **Model-based grading** asks another LLM to score the answer against a rubric, which handles fuzzy qualities like tone. **Human grading** is the most flexible but slowest and most expensive.",
+        "Use code where you can, a model grader where judgement is needed, and people to spot-check the graders. Re-run the eval every time you change the prompt or switch models, so you catch regressions before your users do."
+      ],
+      "keyIdeas": [
+        "An eval is a set of test cases that scores a prompt with a number.",
+        "Define specific, measurable success criteria first.",
+        "Grade with code when possible, a model for judgement, people to spot-check.",
+        "Re-run evals after every prompt or model change."
+      ],
+      "quiz": [
+        {
+          "q": "Which grading method is fastest and cheapest?",
+          "options": [
+            "Human grading",
+            "Code-based grading",
+            "Asking a panel of experts",
+            "Model-based grading"
+          ],
+          "answer": 1,
+          "explain": "Simple code checks like exact match run instantly at almost no cost."
+        },
+        {
+          "q": "When is model-based grading a good choice?",
+          "options": [
+            "Checking a fuzzy quality like politeness against a rubric",
+            "Checking if output is valid JSON",
+            "Counting words"
+          ],
+          "answer": 0,
+          "explain": "A model grader can judge qualities that simple code cannot easily measure."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "eval.py",
+        "source": "# A tiny evaluation: test cases + graders + a score.\ndef fake_llm(review):\n    # Stand-in for a real model call, so this runs anywhere.\n    text = review.lower()\n    if \"love\" in text or \"great\" in text:\n        return \"positive\"\n    if \"broke\" in text or \"late\" in text:\n        return \"Negative.\"\n    return \"positive\"\n\ntest_cases = [\n    {\"input\": \"I love this blender!\", \"expected\": \"positive\"},\n    {\"input\": \"It broke after a day.\", \"expected\": \"negative\"},\n    {\"input\": \"Shipping was late again.\", \"expected\": \"negative\"},\n    {\"input\": \"It is a blender. It blends.\", \"expected\": \"neutral\"},\n    {\"input\": \"Great value for money.\", \"expected\": \"positive\"},\n]\n\n# Code-based graders: fast, cheap and repeatable.\ndef exact_match(output, expected):\n    return output == expected\n\ndef normalized_match(output, expected):\n    return output.strip(\" .\").lower() == expected\n\nfor grader in [exact_match, normalized_match]:\n    passed = 0\n    for case in test_cases:\n        output = fake_llm(case[\"input\"])\n        ok = grader(output, case[\"expected\"])\n        passed += ok\n        if not ok and grader is normalized_match:\n            print(f\"  FAIL: {case['input']!r} -> {output!r}, expected {case['expected']!r}\")\n    print(f\"{grader.__name__}: {passed}/{len(test_cases)} passed\")\n",
+        "runnable": true,
+        "note": "A tiny evaluation: test cases, two code graders and a pass rate."
+      }
+    }
+  ]
+}

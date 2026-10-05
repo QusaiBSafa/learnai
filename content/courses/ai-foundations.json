@@ -1,0 +1,428 @@
+{
+  "slug": "ai-foundations",
+  "title": "AI Foundations",
+  "short": "Foundations",
+  "level": "Beginner",
+  "blurb": "What AI, machine learning and generative AI are, how chatbots like ChatGPT and Claude work, and where they fail.",
+  "stage": "foundations",
+  "order": 1,
+  "lessons": [
+    {
+      "slug": "what-is-ai-ml-dl-genai",
+      "title": "What is AI, ML, DL & GenAI?",
+      "summary": "How the terms fit inside each other, in plain words with no math.",
+      "resources": [
+        {
+          "title": "Google: Introduction to Machine Learning",
+          "url": "https://developers.google.com/machine-learning/intro-to-ml",
+          "type": "course",
+          "minutes": 20
+        },
+        {
+          "title": "Elements of AI (University of Helsinki)",
+          "url": "https://www.elementsofai.com/",
+          "type": "course",
+          "minutes": 360
+        }
+      ],
+      "minutes": 20,
+      "body": [
+        "**Artificial intelligence (AI)** is the big umbrella: any computer system that does something we would normally call smart, like recognizing a face, translating a sentence or playing chess. Early AI was mostly rules written by hand, such as \"if the email contains the word free, mark it as spam.\"",
+        "**Machine learning (ML)** is one way to build AI. Instead of writing the rules yourself, you show the computer many examples and it finds the patterns on its own. It is like learning to spot ripe fruit by looking at hundreds of ripe and unripe ones, rather than reading a rulebook.",
+        "**Deep learning (DL)** is a kind of machine learning that uses large **neural networks**: many layers of simple math units stacked together. Deep learning is what made big jumps in image recognition, speech and language possible, because it can learn very complex patterns from huge amounts of data.",
+        "**Generative AI (GenAI)** is deep learning used to create new things: text, images, music or code. Chatbots like ChatGPT and Claude are generative AI. So the terms fit inside each other like nesting dolls: GenAI is inside deep learning, which is inside machine learning, which is inside AI."
+      ],
+      "keyIdeas": [
+        "AI is the umbrella term for computers doing tasks that seem smart.",
+        "Machine learning learns patterns from examples instead of hand-written rules.",
+        "Deep learning is machine learning with large, layered neural networks.",
+        "Generative AI uses deep learning to create new text, images, audio or code."
+      ],
+      "quiz": [
+        {
+          "q": "Which is the best description of machine learning?",
+          "options": [
+            "A computer following rules a programmer wrote by hand",
+            "A computer learning patterns from examples",
+            "Any robot with a camera",
+            "A chatbot that writes text"
+          ],
+          "answer": 1,
+          "explain": "Machine learning finds patterns in example data instead of relying on hand-written rules."
+        },
+        {
+          "q": "How do the terms fit together?",
+          "options": [
+            "AI is inside machine learning",
+            "Deep learning and AI are unrelated",
+            "GenAI is inside deep learning, inside ML, inside AI"
+          ],
+          "answer": 2,
+          "explain": "Each term is a more specific part of the one before it, like nesting dolls."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "spam_filter.py",
+        "source": "# Two ways to build a spam filter.\nemails = [\n    (\"win a free prize now\", \"spam\"),\n    (\"free money click here\", \"spam\"),\n    (\"claim your prize today\", \"spam\"),\n    (\"lunch at noon tomorrow\", \"ok\"),\n    (\"here are the meeting notes\", \"ok\"),\n    (\"can you review my notes today\", \"ok\"),\n]\n\n# 1) Classic AI: a human writes the rule by hand.\ndef rule_filter(text):\n    return \"spam\" if \"free\" in text else \"ok\"\n\n# 2) Machine learning: the program learns word scores from examples.\nscores = {}\nfor text, label in emails:\n    for word in text.split():\n        scores[word] = scores.get(word, 0) + (1 if label == \"spam\" else -1)\n\ndef learned_filter(text):\n    total = sum(scores.get(word, 0) for word in text.split())\n    return \"spam\" if total > 0 else \"ok\"\n\ntop = sorted(scores.items(), key=lambda kv: kv[1])\nprint(\"Most spammy words:\", top[-3:])\nprint(\"Most normal words:\", top[:3])\nfor test in [\"claim a prize\", \"free notes for the meeting\"]:\n    print(f\"{test!r:32} rule: {rule_filter(test):5} learned: {learned_filter(test)}\")\n",
+        "runnable": true,
+        "note": "Compare a hand-written rule with word scores learned from examples."
+      }
+    },
+    {
+      "slug": "what-is-generative-ai",
+      "title": "What is generative AI?",
+      "summary": "How generative AI differs from classic ML and what it is used for.",
+      "resources": [
+        {
+          "title": "Google Skills: Introduction to Generative AI",
+          "url": "https://www.skills.google/course_templates/536",
+          "type": "course",
+          "minutes": 45
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "Classic machine learning mostly **predicts or labels**: is this email spam, what number is in this photo, how much will this house sell for. The answer is a label or a number about something that already exists.",
+        "**Generative AI** produces **new content** instead: a paragraph, a picture, a melody, a piece of code. It learns the patterns in a huge collection of examples and then creates fresh output that follows those patterns, a bit like a musician who has heard thousands of songs and can improvise a new one in the same style.",
+        "You guide it with a **prompt**, a request written in plain language such as \"write a polite reply to this email\" or \"draw a cat in a raincoat\". Text tools like ChatGPT and Claude are built on **large language models (LLMs)**; image tools use related models trained on pictures.",
+        "Common uses today include drafting and summarizing text, answering questions, writing and explaining code, translating, brainstorming and making images. The output is often very good but not guaranteed to be correct, so a person still needs to check anything important."
+      ],
+      "keyIdeas": [
+        "Classic ML labels or predicts; generative AI creates new content.",
+        "It learns patterns from lots of examples, then makes new output in that style.",
+        "You steer it with a plain-language prompt.",
+        "Outputs can be wrong, so check anything that matters."
+      ],
+      "quiz": [
+        {
+          "q": "Which task is generative AI rather than classic prediction?",
+          "options": [
+            "Writing a short story about a dragon",
+            "Flagging an email as spam",
+            "Estimating tomorrow's temperature"
+          ],
+          "answer": 0,
+          "explain": "Writing a story creates new content, while the others output a label or a number."
+        },
+        {
+          "q": "What do you give a generative AI tool to tell it what you want?",
+          "options": [
+            "A spreadsheet of labels",
+            "A prompt",
+            "A neural network",
+            "A password"
+          ],
+          "answer": 1,
+          "explain": "A prompt is the plain-language instruction that steers what the model generates."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "tiny_generator.py",
+        "source": "import random\nrandom.seed(3)\n\ntext = (\"the cat sat on the mat . the dog sat on the rug . \"\n        \"the cat chased the dog . the dog chased the ball .\").split()\n\n# Classic ML answers a question about input: is this sentence about a cat?\ndef is_about_cat(sentence):\n    return \"cat\" in sentence.split()\n\nprint(\"Classify:\", is_about_cat(\"the cat sat on the rug\"))\n\n# Generative AI creates NEW content that looks like its training data.\n# Here: learn which word can follow which, then chain random choices.\nfollows = {}\nfor a, b in zip(text, text[1:]):\n    follows.setdefault(a, []).append(b)\n\nfor _ in range(3):\n    word, sentence = \"the\", [\"the\"]\n    while word != \".\" and len(sentence) < 12:\n        word = random.choice(follows[word])\n        sentence.append(word)\n    print(\"Generate:\", \" \".join(sentence))\n",
+        "runnable": true,
+        "note": "Each run of the loop invents a new sentence from patterns in the training text."
+      }
+    },
+    {
+      "slug": "how-llms-work-the-short-version",
+      "title": "How LLMs work, the short version",
+      "summary": "Next-token prediction, pretraining, then tuning into an assistant.",
+      "resources": [
+        {
+          "title": "3Blue1Brown: Large Language Models explained briefly",
+          "url": "https://www.youtube.com/watch?v=LPZh9BOjkQs",
+          "type": "video",
+          "minutes": 8
+        },
+        {
+          "title": "Andrej Karpathy: Intro to Large Language Models",
+          "url": "https://www.youtube.com/watch?v=zjkBMFhNj_g",
+          "type": "video",
+          "minutes": 60
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "At its core, a **large language model (LLM)** does one thing: given some text, it predicts what comes next. It splits text into small pieces called **tokens** (words or parts of words) and gives a probability for every possible next token. Then it picks one, adds it to the text, and repeats. That is how a whole answer appears, one token at a time.",
+        "This skill comes from **pretraining**. The model reads a huge amount of text from books, websites and code, and plays a fill-in-the-next-word game billions of times. Each time it guesses wrong, its internal numbers (called **parameters** or weights) are nudged so the right answer becomes a bit more likely.",
+        "A pretrained model is like a very well-read autocomplete. Ask it a question and it might just continue with more questions. To turn it into a helpful assistant, it gets extra training: **fine-tuning** on example conversations, and then feedback from people (or from other models) about which answers are better.",
+        "This explains a lot of LLM behaviour. They are fluent because they have seen so much language. They can be wrong because they produce what sounds likely, not what they have checked to be true."
+      ],
+      "keyIdeas": [
+        "An LLM predicts the next token, again and again, to build an answer.",
+        "Pretraining on huge amounts of text teaches language and facts.",
+        "Fine-tuning and human feedback turn it into a helpful assistant.",
+        "Likely-sounding is not the same as true."
+      ],
+      "quiz": [
+        {
+          "q": "What does an LLM do at each step when it writes an answer?",
+          "options": [
+            "Looks up the answer in a database",
+            "Copies a full answer it memorized",
+            "Predicts a likely next token and adds it"
+          ],
+          "answer": 2,
+          "explain": "Answers are generated one token at a time by predicting what is likely to come next."
+        },
+        {
+          "q": "Why is a model fine-tuned after pretraining?",
+          "options": [
+            "To make it smaller",
+            "To turn a text-continuer into a helpful assistant",
+            "To teach it what words are",
+            "To connect it to the internet"
+          ],
+          "answer": 1,
+          "explain": "Pretraining teaches language; fine-tuning and feedback teach it to follow instructions and be helpful."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "next_word.py",
+        "source": "from collections import Counter, defaultdict\n\n# \"Pretraining\" on a tiny corpus: count which word comes next.\ncorpus = (\"i like green tea . i like hot tea . i like hot soup . \"\n          \"you like hot tea . i drink green tea .\").split()\n\nnext_counts = defaultdict(Counter)\nfor word, nxt in zip(corpus, corpus[1:]):\n    next_counts[word][nxt] += 1\n\ndef next_word_probs(word):\n    counts = next_counts[word]\n    total = sum(counts.values())\n    return {w: round(c / total, 2) for w, c in counts.most_common()}\n\nprint(\"After 'like':\", next_word_probs(\"like\"))\nprint(\"After 'hot': \", next_word_probs(\"hot\"))\n\n# Generate by repeatedly picking the most likely next word.\nword, out = \"you\", [\"you\"]\nwhile word != \".\" and len(out) < 10:\n    word = next_counts[word].most_common(1)[0][0]\n    out.append(word)\nprint(\"Generated:\", \" \".join(out))\n",
+        "runnable": true,
+        "note": "A tiny next-word predictor built by counting, the same core idea as an LLM."
+      }
+    },
+    {
+      "slug": "inside-an-llm",
+      "title": "Inside an LLM",
+      "summary": "Tokens, embeddings and transformers, seen visually.",
+      "resources": [
+        {
+          "title": "Google ML Crash Course: Intro to LLMs",
+          "url": "https://developers.google.com/machine-learning/crash-course/llm",
+          "type": "course",
+          "minutes": 45
+        },
+        {
+          "title": "LLM Visualization (3D walkthrough)",
+          "url": "https://bbycroft.net/llm",
+          "type": "interactive",
+          "minutes": 30
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "First, text becomes **tokens**. A tokenizer chops a sentence into pieces (common words stay whole, rare words get split) and maps each piece to an ID number. The model never sees letters, only these numbers.",
+        "Next, each token ID is turned into an **embedding**: a long list of numbers that acts like a location on a map of meaning. Words used in similar ways, like \"cat\" and \"dog\", end up near each other on this map.",
+        "Then come the **transformer** layers. Their key trick is **attention**: every token looks at the other tokens and decides how much each one matters to it. In \"the bank of the river\", attention lets \"bank\" pay attention to \"river\", so the model understands a riverbank and not a money bank.",
+        "A real LLM stacks dozens of these layers, each refining the meaning a bit more. At the end, the final vector for the last token is turned into a probability for every token in the vocabulary, and that is the model's prediction for what comes next."
+      ],
+      "keyIdeas": [
+        "Tokens turn text into ID numbers the model can work with.",
+        "Embeddings place each token on a map of meaning.",
+        "Attention lets each token use context from the other tokens.",
+        "Many stacked layers end in a probability for every possible next token."
+      ],
+      "quiz": [
+        {
+          "q": "What is an embedding?",
+          "options": [
+            "A list of numbers representing a token's meaning",
+            "A rule for splitting words",
+            "The final answer of the model"
+          ],
+          "answer": 0,
+          "explain": "Embeddings are vectors of numbers where similar meanings sit close together."
+        },
+        {
+          "q": "In \"the bank of the river\", what helps the model know which \"bank\" is meant?",
+          "options": [
+            "The tokenizer",
+            "Attention to the word \"river\"",
+            "The length of the sentence",
+            "Random chance"
+          ],
+          "answer": 1,
+          "explain": "Attention lets a token draw on the context from other tokens, such as \"river\"."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "attention.py",
+        "source": "import numpy as np\nnp.random.seed(0)\n\n# 1) Tokens: split text into pieces and give each an ID.\nsentence = \"the bank of the river\"\nvocab = {w: i for i, w in enumerate(sorted(set(sentence.split())))}\nids = [vocab[w] for w in sentence.split()]\nprint(\"Token IDs:\", ids)\n\n# 2) Embeddings: each ID looks up a vector (random here, learned in a real model).\ndim = 4\nembedding_table = np.random.randn(len(vocab), dim)\nx = embedding_table[ids]            # shape: (5 tokens, 4 numbers each)\nprint(\"Embeddings shape:\", x.shape)\n\n# 3) Self-attention: every token scores how relevant every other token is.\nWq, Wk, Wv = (np.random.randn(dim, dim) for _ in range(3))\nq, k, v = x @ Wq, x @ Wk, x @ Wv\nscores = q @ k.T / np.sqrt(dim)\nweights = np.exp(scores) / np.exp(scores).sum(axis=1, keepdims=True)  # softmax\nout = weights @ v                   # each token becomes a weighted mix\n\nnp.set_printoptions(precision=2, suppress=True)\nprint(\"How much 'bank' attends to each word:\")\nfor word, w in zip(sentence.split(), weights[1]):\n    print(f\"  {word:6} {w:.2f}\")\nprint(\"Output shape:\", out.shape)\n",
+        "runnable": true,
+        "note": "The weights are random here; in a real model they are learned during training."
+      }
+    },
+    {
+      "slug": "what-can-ai-do",
+      "title": "What can AI do?",
+      "summary": "Real tasks across text, images and audio, and where AI fits in work.",
+      "resources": [
+        {
+          "title": "Hugging Face: Transformers, what can they do?",
+          "url": "https://huggingface.co/learn/llm-course/chapter1/3",
+          "type": "interactive",
+          "minutes": 20
+        }
+      ],
+      "minutes": 20,
+      "body": [
+        "With **text**, AI can draft emails, summarize long documents, translate, answer questions, pull facts out of messy notes and write or explain code. This is where chat assistants like ChatGPT and Claude shine.",
+        "With **images**, AI can recognize what is in a photo, read handwriting, spot defects on a factory line, help doctors look at scans and generate brand-new pictures from a description. With **audio**, it can turn speech into text, read text aloud in a natural voice and even generate music.",
+        "In everyday work, AI is best thought of as a fast, tireless assistant for the first draft or the boring 80%: sorting, summarizing, drafting and searching. A person still sets the goal, checks the result and makes the final call, especially when mistakes are costly.",
+        "A good rule of thumb: AI is strong when the task has lots of examples to learn from and an answer that is easy to check. It is weaker when the task needs up-to-date facts it has never seen, careful long chains of logic, or accountability for a decision."
+      ],
+      "keyIdeas": [
+        "AI works across text, images and audio, both understanding and creating.",
+        "It is great for first drafts, summaries, sorting and search.",
+        "People still set goals, check results and own decisions.",
+        "Best fit: tasks with lots of examples and answers that are easy to check."
+      ],
+      "quiz": [
+        {
+          "q": "Which is a good fit for AI today?",
+          "options": [
+            "Making a final legal decision with nobody checking",
+            "Turning a meeting recording into written notes",
+            "Knowing today's news without any source"
+          ],
+          "answer": 1,
+          "explain": "Speech-to-text and summarizing are well-practised tasks that a person can easily check."
+        },
+        {
+          "q": "What is a sensible way to use AI at work?",
+          "options": [
+            "Trust every output without reading it",
+            "Never use it for writing",
+            "Only use it for images",
+            "Use it for drafts and check the result"
+          ],
+          "answer": 3,
+          "explain": "AI speeds up first drafts, while a person reviews and decides."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "read_digits.py",
+        "source": "from sklearn.datasets import load_digits\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.model_selection import train_test_split\n\n# 1,797 tiny 8x8 images of handwritten digits, each labeled 0-9.\ndigits = load_digits()\nX_train, X_test, y_train, y_test = train_test_split(\n    digits.data, digits.target, test_size=0.25, random_state=0)\n\n# Learn from examples instead of writing rules for each digit.\nmodel = LogisticRegression(max_iter=2000)\nmodel.fit(X_train, y_train)\n\nprint(f\"Accuracy on unseen images: {model.score(X_test, y_test):.1%}\")\n\n# Show one test image as text art, plus the model's guess.\nimage = X_test[0].reshape(8, 8)\nfor row in image:\n    print(\"\".join(\"#\" if p > 8 else \".\" for p in row))\nprint(\"Model says:\", model.predict(X_test[:1])[0], \"| true label:\", y_test[0])\n",
+        "runnable": true,
+        "note": "A real image-recognition model trained in about a second on scikit-learn's built-in digits."
+      }
+    },
+    {
+      "slug": "limits-hallucinations-and-bias",
+      "title": "Limits: hallucinations and bias",
+      "summary": "Why models confidently make things up, and where bias comes from.",
+      "resources": [
+        {
+          "title": "OpenAI: Why language models hallucinate",
+          "url": "https://openai.com/index/why-language-models-hallucinate/",
+          "type": "article",
+          "minutes": 10
+        },
+        {
+          "title": "Hugging Face: Bias and limitations",
+          "url": "https://huggingface.co/learn/llm-course/chapter1/9",
+          "type": "article",
+          "minutes": 10
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "A **hallucination** is when a model states something false with total confidence, like a made-up quote, a fake book title or a wrong date. It happens because an LLM generates text that sounds likely, not text it has checked. When it does not know, it has no built-in urge to say so; it simply continues with the most plausible-sounding words.",
+        "Hallucinations are more common for rare facts, very recent events, exact numbers, citations and links. You can reduce them by giving the model the source material to work from, asking it to say \"I don't know\" when unsure, and checking important claims yourself.",
+        "**Bias** comes from the training data. If the text a model learned from mostly links \"doctor\" with \"he\" and \"nurse\" with \"she\", the model will tend to repeat that pattern. It is like a child who only ever saw one kind of person in a job assuming that is the only kind who does it.",
+        "Bias can show up in hiring tools, loan decisions, image generators and everyday writing. Developers work to reduce it with better data, testing and tuning, but it never fully disappears, so it is worth watching for, especially when AI is used to make decisions about people."
+      ],
+      "keyIdeas": [
+        "Hallucinations are confident, fluent statements that are false.",
+        "They happen because models produce likely text, not verified facts.",
+        "Bias in the training data becomes bias in the model's outputs.",
+        "Give sources, allow \"I don't know\", and check anything important."
+      ],
+      "quiz": [
+        {
+          "q": "Why do LLMs hallucinate?",
+          "options": [
+            "They are trying to trick you",
+            "They generate likely-sounding text without checking facts",
+            "Their internet connection is slow"
+          ],
+          "answer": 1,
+          "explain": "Models predict plausible words, and plausible is not always true."
+        },
+        {
+          "q": "Where does bias in an AI model mostly come from?",
+          "options": [
+            "Patterns in the data it was trained on",
+            "The colour of the user interface",
+            "The speed of the computer",
+            "The length of the prompt"
+          ],
+          "answer": 0,
+          "explain": "A model learns and repeats patterns, including unfair ones, from its training data."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "confident_mistakes.py",
+        "source": "from collections import Counter, defaultdict\n\n# Training text: a few facts, plus a skewed pattern about doctors and nurses.\ncorpus = \"\"\"paris is the capital of france .\nrome is the capital of italy .\nmadrid is the capital of spain .\nsydney is the largest city of australia .\nthe doctor said he was busy . the doctor said he was late .\nthe doctor said she was busy . the nurse said she was tired .\"\"\".split()\n\n# Predict the next word from the previous TWO words.\nnxt = defaultdict(Counter)\nfor a, b, c in zip(corpus, corpus[1:], corpus[2:]):\n    nxt[(a, b)][c] += 1\n\ndef complete(prompt, n=6):\n    words = prompt.split()\n    for _ in range(n):\n        options = nxt[(words[-2], words[-1])]\n        if not options:\n            break\n        words.append(options.most_common(1)[0][0])  # always the top guess\n        if words[-1] == \".\":\n            break\n    return \" \".join(words)\n\n# Hallucination: fluent and confident, but false (Sydney is not a capital).\nprint(complete(\"sydney is the capital\"))\n# Bias: the model repeats whatever pattern was most common in its data.\nprint(complete(\"the doctor said\"))\nprint(complete(\"the nurse said\"))\nprint(\"Seen after 'doctor said':\", dict(nxt[(\"doctor\", \"said\")]))\n",
+        "runnable": true,
+        "note": "A tiny counting model shows both problems: invented facts and copied bias."
+      }
+    },
+    {
+      "slug": "deep-dive-how-chatgpt-style-models-are-built",
+      "title": "Deep dive (optional): how ChatGPT-style models are built",
+      "summary": "The full training pipeline for a general audience.",
+      "resources": [
+        {
+          "title": "Karpathy: Deep Dive into LLMs like ChatGPT",
+          "url": "https://www.youtube.com/watch?v=7xTGNNLPyMI",
+          "type": "video",
+          "minutes": 211
+        }
+      ],
+      "minutes": 40,
+      "body": [
+        "Step one is **collecting data**: a huge amount of text from the public web, books, code and other sources, then filtering out junk, duplicates and harmful content. The text is turned into tokens, often trillions of them.",
+        "Step two is **pretraining**. A transformer network with billions of parameters plays the next-token game over all that text, using thousands of specialised chips for weeks or months. The result is a **base model**: it knows a lot about language and the world, but it just continues text and does not follow instructions well.",
+        "Step three is **supervised fine-tuning**. People write many example conversations showing a helpful assistant answering well, and the base model is trained further on them. It is like an apprenticeship after years of reading: the model learns the format and style of a good answer.",
+        "Step four is **preference tuning**, such as reinforcement learning from human feedback (RLHF). People compare pairs of answers and pick the better one; a **reward model** learns those preferences, and the assistant is trained to produce answers that score well. This is where much of the helpfulness, tone and refusal of harmful requests comes from.",
+        "Finally, the model is tested, safety-checked and deployed. Many modern models also get extra training on step-by-step reasoning and on using tools like web search or code, but the core recipe remains: pretrain on lots of text, then teach it to be a good assistant."
+      ],
+      "keyIdeas": [
+        "Pretraining on huge text collections produces a base model.",
+        "Supervised fine-tuning teaches it to answer like an assistant.",
+        "Preference tuning (like RLHF) uses ratings to make answers more helpful and safe.",
+        "Most compute goes into pretraining; tuning shapes the behaviour."
+      ],
+      "quiz": [
+        {
+          "q": "What can a base model do right after pretraining?",
+          "options": [
+            "Follow instructions perfectly",
+            "Continue text, without reliably acting as an assistant",
+            "Browse the web",
+            "Nothing useful at all"
+          ],
+          "answer": 1,
+          "explain": "A base model is a powerful text-continuer; tuning turns it into an assistant."
+        },
+        {
+          "q": "In RLHF, what does the reward model learn?",
+          "options": [
+            "How to split text into tokens",
+            "Which websites to crawl",
+            "Which answers people prefer"
+          ],
+          "answer": 2,
+          "explain": "The reward model is trained on human comparisons and then guides the assistant toward preferred answers."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "three_stages.py",
+        "source": "import random\nfrom collections import Counter, defaultdict\nrandom.seed(0)\n\nmodel = defaultdict(Counter)   # word -> counts of the words that followed it\n\ndef train(text, weight=1):\n    words = text.split()\n    for a, b in zip(words, words[1:]):\n        model[a][b] += weight\n\ndef generate(start=\"answer :\"):\n    words = start.split()\n    while words[-1] != \".\" and model[words[-1]]:\n        options = model[words[-1]]\n        words.append(random.choices(list(options), list(options.values()))[0])\n    return \" \".join(words)\n\ndef helpful_share(n=200):\n    return sum(\"help\" in generate() for _ in range(n)) / n\n\n# Stage 1 - pretraining: lots of ordinary internet text. Learns language, not manners.\ntrain(\"answer : who knows . answer : stop asking me . answer : happy to help .\")\nprint(f\"Base model helpful:       {helpful_share():.0%}\")\n\n# Stage 2 - fine-tuning: fewer, high-quality example conversations count extra.\ntrain(\"answer : happy to help .\", weight=6)\nprint(f\"Fine-tuned model helpful: {helpful_share():.0%}\")\n\n# Stage 3 - preference tuning: compare two replies, a reward model picks the\n# better one, and the model is trained a little more on the winner.\ndef reward(reply):\n    return (\"help\" in reply) - (\"stop\" in reply)\n\nfor _ in range(30):\n    a, b = generate(), generate()\n    train(max(a, b, key=reward))\nprint(f\"After preference tuning:  {helpful_share():.0%}\")\n",
+        "runnable": true,
+        "note": "A toy model goes through pretraining, fine-tuning and preference tuning."
+      }
+    }
+  ]
+}

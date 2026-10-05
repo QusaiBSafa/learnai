@@ -1,0 +1,439 @@
+{
+  "slug": "ml-fundamentals",
+  "title": "Machine Learning Fundamentals",
+  "short": "ML Basics",
+  "level": "Intermediate",
+  "blurb": "Teach a computer from data: regression, classification, clustering, and how to tell if a model is any good.",
+  "stage": "core-ml",
+  "order": 4,
+  "lessons": [
+    {
+      "slug": "supervised-vs-unsupervised-learning",
+      "title": "Supervised vs unsupervised learning",
+      "summary": "Labeled vs unlabeled data and the main kinds of problems.",
+      "resources": [
+        {
+          "title": "Google: Introduction to Machine Learning",
+          "url": "https://developers.google.com/machine-learning/intro-to-ml",
+          "type": "course",
+          "minutes": 20
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "Machine learning means letting a computer find patterns in examples instead of writing every rule by hand. The big question is what kind of examples you give it.",
+        "In **supervised learning**, every example comes with the right answer, called a **label**. It is like studying with flashcards that have the answer on the back: photos labeled \"cat\" or \"dog\", or houses listed with their sale price. The model learns to map inputs to labels so it can answer for new inputs.",
+        "Supervised problems come in two main flavors. **Classification** predicts a category (spam or not spam, which flower species). **Regression** predicts a number (tomorrow's temperature, a house price).",
+        "In **unsupervised learning**, there are no labels at all. The model has to find structure on its own, like sorting a pile of mixed buttons into groups by size and color without anyone telling you the groups. **Clustering** is the classic example.",
+        "Which one you use depends on your data. If you have answers to learn from, go supervised. If you only have raw data and want to discover what is in it, go unsupervised. In the code below, the same flowers are used both ways."
+      ],
+      "keyIdeas": [
+        "Supervised learning learns from examples that include the right answer (labels).",
+        "Classification predicts categories; regression predicts numbers.",
+        "Unsupervised learning finds structure, like groups, in data with no labels.",
+        "Your data decides the approach: labels or no labels?"
+      ],
+      "quiz": [
+        {
+          "q": "You have 10,000 emails, each marked \"spam\" or \"not spam\". What kind of learning fits?",
+          "options": [
+            "Unsupervised clustering",
+            "Supervised regression",
+            "Supervised classification"
+          ],
+          "answer": 2,
+          "explain": "The emails have labels and the answer is a category, so it is supervised classification."
+        },
+        {
+          "q": "Which task is regression?",
+          "options": [
+            "Predicting a house's sale price",
+            "Grouping customers with no labels",
+            "Deciding if a photo shows a cat or a dog",
+            "Sorting news into topics"
+          ],
+          "answer": 0,
+          "explain": "Regression predicts a number, and a price is a number."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "two_ways.py",
+        "source": "# Same flowers, two ways of learning\nfrom sklearn.datasets import load_iris\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.cluster import KMeans\n\niris = load_iris()\nX, y = iris.data, iris.target   # X = measurements, y = species labels\n\n# Supervised: we give the model the answers (labels) to learn from\nclf = KNeighborsClassifier(n_neighbors=3)\nclf.fit(X, y)\nnew_flower = [[5.0, 3.4, 1.5, 0.2]]\nprint(\"Supervised guess:\", iris.target_names[clf.predict(new_flower)[0]])\n\n# Unsupervised: no labels at all, the model just finds groups\nkm = KMeans(n_clusters=3, n_init=10, random_state=0)\ngroups = km.fit_predict(X)\nprint(\"Unsupervised group ids for first 5 flowers:\", groups[:5])\nprint(\"Group sizes:\", [int((groups == g).sum()) for g in range(3)])\n# The groups have no names: the model only knows \"these look alike\".\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "linear-regression",
+      "title": "Linear regression",
+      "summary": "Predict numbers: loss, gradient descent, hyperparameters.",
+      "resources": [
+        {
+          "title": "StatQuest: Linear Regression, Clearly Explained",
+          "url": "https://www.youtube.com/watch?v=7ArmBVF2dCs",
+          "type": "video",
+          "minutes": 27
+        },
+        {
+          "title": "MLU-Explain: Linear Regression",
+          "url": "https://mlu-explain.github.io/linear-regression/",
+          "type": "interactive",
+          "minutes": 15
+        }
+      ],
+      "minutes": 35,
+      "body": [
+        "**Linear regression** predicts a number by drawing the best straight line through your data. With one input it is the school formula `y = w * x + b`: `w` is the slope (how much `y` grows when `x` grows) and `b` is where the line starts.",
+        "To find the best line we need a way to score a line. That score is the **loss**. A common one is **mean squared error**: for every example, take the gap between prediction and truth, square it, and average. A smaller loss means a better line.",
+        "**Gradient descent** finds good values of `w` and `b` step by step. Picture standing on a foggy hill and wanting to reach the valley: you feel which way is downhill and take a small step. The gradient tells you the downhill direction for each parameter.",
+        "The size of each step is the **learning rate**. Too small and training crawls; too big and you overshoot the valley and bounce around. Settings you choose yourself, like the learning rate or the number of steps, are called **hyperparameters**.",
+        "In the code, watch the loss drop as the line slowly tilts into place, then use it to make a prediction."
+      ],
+      "keyIdeas": [
+        "Linear regression fits a line y = w*x + b to predict a number.",
+        "The loss (like mean squared error) scores how wrong the line is.",
+        "Gradient descent nudges w and b downhill to reduce the loss.",
+        "The learning rate is a hyperparameter: too big overshoots, too small is slow."
+      ],
+      "quiz": [
+        {
+          "q": "What does the loss measure?",
+          "options": [
+            "How far the predictions are from the true values",
+            "How fast the model trains",
+            "How many features the data has"
+          ],
+          "answer": 0,
+          "explain": "The loss summarizes the prediction errors; training tries to make it small."
+        },
+        {
+          "q": "Your loss jumps around and grows instead of shrinking. What is the most likely fix?",
+          "options": [
+            "Use more features",
+            "Train for more steps",
+            "Lower the learning rate",
+            "Raise the learning rate"
+          ],
+          "answer": 2,
+          "explain": "A learning rate that is too large makes each step overshoot the minimum."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "gradient_descent_line.py",
+        "source": "# Fit a line y = w*x + b with gradient descent\nimport numpy as np\n\n# Tiny dataset: house size (100s of m^2) -> price (100k)\nx = np.array([0.5, 0.8, 1.0, 1.2, 1.5, 2.0])\ny = np.array([1.1, 1.6, 2.0, 2.3, 3.1, 3.9])\n\nw, b = 0.0, 0.0          # start with a flat line\nlr = 0.1                 # learning rate (a hyperparameter)\n\nfor step in range(501):\n    pred = w * x + b\n    error = pred - y\n    loss = (error ** 2).mean()          # mean squared error\n    # gradients: which way to nudge w and b to lower the loss\n    dw = 2 * (error * x).mean()\n    db = 2 * error.mean()\n    w -= lr * dw\n    b -= lr * db\n    if step % 100 == 0:\n        print(f\"step {step:3d}  loss={loss:.4f}  w={w:.3f}  b={b:.3f}\")\n\nprint(f\"Prediction for size 1.8: {w * 1.8 + b:.2f}\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "classification-and-logistic-regression",
+      "title": "Classification and logistic regression",
+      "summary": "Predict categories with probabilities and thresholds.",
+      "resources": [
+        {
+          "title": "StatQuest: Logistic Regression",
+          "url": "https://www.youtube.com/watch?v=yIYKR4sgzI8",
+          "type": "video",
+          "minutes": 9
+        },
+        {
+          "title": "Google ML Crash Course: Logistic Regression",
+          "url": "https://developers.google.com/machine-learning/crash-course/logistic-regression",
+          "type": "course",
+          "minutes": 40
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "**Classification** answers a question with a category: spam or not, sick or healthy, pass or fail. Despite its name, **logistic regression** is one of the simplest classification models.",
+        "It works in two steps. First it computes a score like linear regression does. Then it squashes that score with the **sigmoid** function into a number between 0 and 1, which we read as a **probability**, for example \"72% chance this email is spam\".",
+        "A probability is not yet a decision. You pick a **threshold**: if the probability is at or above it, predict yes. The usual default is 0.5, but you can move it. A doctor screening for a disease might use a low threshold so fewer sick patients are missed, at the cost of more false alarms.",
+        "Training uses a loss called **log loss** (cross-entropy), which punishes the model hard for being confidently wrong. The model then adjusts its weights with gradient descent, just like linear regression.",
+        "In the code, the model learns how hours of study relate to passing an exam, and you will see the same probability turn into different decisions as the threshold moves."
+      ],
+      "keyIdeas": [
+        "Classification predicts a category instead of a number.",
+        "Logistic regression outputs a probability between 0 and 1 using the sigmoid.",
+        "A threshold turns the probability into a yes/no decision.",
+        "Moving the threshold trades missed cases against false alarms."
+      ],
+      "quiz": [
+        {
+          "q": "What does logistic regression output before a threshold is applied?",
+          "options": [
+            "A category name",
+            "A probability between 0 and 1",
+            "A straight line",
+            "A cluster number"
+          ],
+          "answer": 1,
+          "explain": "The sigmoid turns the score into a probability; the threshold comes after."
+        },
+        {
+          "q": "A model says P(spam) = 0.4. With a threshold of 0.3, what does it predict?",
+          "options": [
+            "Spam",
+            "Not spam",
+            "It cannot decide"
+          ],
+          "answer": 0,
+          "explain": "0.4 is at or above the 0.3 threshold, so the prediction is spam."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "logistic.py",
+        "source": "# Logistic regression: probabilities, then a threshold\nfrom sklearn.linear_model import LogisticRegression\nimport numpy as np\n\n# Hours studied -> passed the exam (1) or not (0)\nhours = np.array([[0.5], [1], [1.5], [2], [2.5], [3], [3.5], [4], [4.5], [5]])\npassed = np.array([0, 0, 0, 0, 1, 0, 1, 1, 1, 1])\n\nmodel = LogisticRegression()\nmodel.fit(hours, passed)\n\nfor h in [1.0, 2.5, 3.0, 4.0]:\n    p = model.predict_proba([[h]])[0, 1]   # probability of class 1\n    print(f\"{h} hours -> P(pass) = {p:.2f}\")\n\n# The threshold turns a probability into a yes/no decision\np = model.predict_proba([[2.7]])[0, 1]\nfor threshold in [0.3, 0.5, 0.7]:\n    decision = \"pass\" if p >= threshold else \"fail\"\n    print(f\"P={p:.2f}, threshold {threshold}: predict {decision}\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "evaluating-models",
+      "title": "Evaluating models",
+      "summary": "Confusion matrix, accuracy, precision, recall and ROC.",
+      "resources": [
+        {
+          "title": "StatQuest: The Confusion Matrix",
+          "url": "https://www.youtube.com/watch?v=Kdsp6soqA7o",
+          "type": "video",
+          "minutes": 7
+        },
+        {
+          "title": "MLU-Explain: Precision and Recall",
+          "url": "https://mlu-explain.github.io/precision-recall/",
+          "type": "interactive",
+          "minutes": 15
+        }
+      ],
+      "minutes": 30,
+      "body": [
+        "A model is only useful if you can measure how good it is. For classification, start with the **confusion matrix**: a small table that counts **true positives** (caught it), **false positives** (false alarm), **false negatives** (missed it) and **true negatives** (correctly ignored).",
+        "**Accuracy** is the share of all predictions that were right. It sounds perfect but can fool you. If only 1 in 100 emails is spam, a model that always says \"not spam\" is 99% accurate and completely useless.",
+        "**Precision** asks: of everything I flagged, how much was really positive? **Recall** asks: of all the real positives, how many did I catch? A smoke alarm that beeps at toast has low precision; one that sleeps through a fire has low recall. Raising one usually lowers the other.",
+        "Since the threshold changes these numbers, the **ROC curve** plots the true positive rate against the false positive rate for every possible threshold. The area under it, **AUC**, sums it up in one number: 1.0 is perfect and 0.5 is no better than a coin flip.",
+        "The code computes all of these by hand for ten emails, so you can see exactly where each number comes from."
+      ],
+      "keyIdeas": [
+        "The confusion matrix counts true/false positives and negatives.",
+        "Accuracy can mislead when one class is rare.",
+        "Precision: how many flagged items were right. Recall: how many real ones you caught.",
+        "ROC AUC scores a model across all thresholds; 0.5 means random guessing."
+      ],
+      "quiz": [
+        {
+          "q": "A cancer screening test must miss as few sick patients as possible. Which metric matters most?",
+          "options": [
+            "Precision",
+            "Accuracy",
+            "Recall"
+          ],
+          "answer": 2,
+          "explain": "Recall measures how many of the real positives were caught, so missed cases lower it."
+        },
+        {
+          "q": "Only 2% of transactions are fraud. A model that always says \"not fraud\" has what accuracy?",
+          "options": [
+            "2%",
+            "50%",
+            "98%",
+            "100%"
+          ],
+          "answer": 2,
+          "explain": "It is right on all the 98% normal transactions, which shows why accuracy alone can mislead."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "metrics.py",
+        "source": "# Confusion matrix, accuracy, precision and recall by hand\nimport numpy as np\nfrom sklearn.metrics import confusion_matrix, roc_auc_score\n\n# 1 = spam, 0 = not spam\nactual    = np.array([1, 1, 1, 1, 0, 0, 0, 0, 0, 0])\nscores    = np.array([.9, .8, .4, .7, .2, .6, .1, .3, .05, .2])\npredicted = (scores >= 0.5).astype(int)\n\ntn, fp, fn, tp = confusion_matrix(actual, predicted).ravel()\nprint(f\"TP={tp} FP={fp} FN={fn} TN={tn}\")\n\naccuracy  = (tp + tn) / len(actual)\nprecision = tp / (tp + fp)   # of the emails we flagged, how many were spam?\nrecall    = tp / (tp + fn)   # of all spam, how much did we catch?\nprint(f\"accuracy={accuracy:.2f} precision={precision:.2f} recall={recall:.2f}\")\n\n# AUC looks at every threshold at once (1.0 = perfect, 0.5 = coin flip)\nprint(f\"ROC AUC = {roc_auc_score(actual, scores):.2f}\")\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "overfitting-and-train-test-splits",
+      "title": "Overfitting and train/test splits",
+      "summary": "Why models fail on new data, and how to split your data.",
+      "resources": [
+        {
+          "title": "MLU-Explain: Train, Test, and Validation Sets",
+          "url": "https://mlu-explain.github.io/train-test-validation/",
+          "type": "interactive",
+          "minutes": 10
+        },
+        {
+          "title": "StatQuest: Bias and Variance",
+          "url": "https://www.youtube.com/watch?v=EuBBz3bI-aA",
+          "type": "video",
+          "minutes": 6
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "The goal of a model is to do well on **new** data it has never seen, not just on the examples it trained on. This ability is called **generalization**.",
+        "**Overfitting** is when a model memorizes its training data, including the random noise, instead of learning the real pattern. It is like a student who memorizes last year's exam answers and then fails when the questions change. **Underfitting** is the opposite: the model is too simple to capture the pattern at all.",
+        "To catch overfitting, split your data before training. The **training set** is what the model learns from. The **test set** is locked away and used only at the end to estimate real-world performance. Often there is also a **validation set** for comparing models and tuning hyperparameters along the way.",
+        "The warning sign is a gap: low error on training data but high error on test data. Common fixes are more data, a simpler model, or regularization, which penalizes overly complex models.",
+        "In the code, three models of growing flexibility fit the same noisy curve. Watch the most flexible one get the best training score and the worst test score."
+      ],
+      "keyIdeas": [
+        "Models should generalize to new data, not memorize the training set.",
+        "Overfitting: great on training data, poor on new data.",
+        "Keep a test set aside and use it only for the final check.",
+        "A big gap between train and test error is the classic warning sign."
+      ],
+      "quiz": [
+        {
+          "q": "Train error is tiny but test error is huge. What is happening?",
+          "options": [
+            "Underfitting",
+            "The test set is too big",
+            "Overfitting"
+          ],
+          "answer": 2,
+          "explain": "Doing great on seen data but badly on unseen data means the model memorized instead of generalizing."
+        },
+        {
+          "q": "Why should you avoid tuning your model using the test set?",
+          "options": [
+            "The test score would no longer be an honest estimate of performance on new data",
+            "It makes training slower",
+            "Test sets cannot be used for scoring",
+            "It causes underfitting"
+          ],
+          "answer": 0,
+          "explain": "If you tune on the test set, it stops being unseen data and its score becomes too optimistic."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "overfit.py",
+        "source": "# A too-flexible model memorizes training data and fails on new data\nimport numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.preprocessing import PolynomialFeatures\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.metrics import mean_squared_error\n\nrng = np.random.default_rng(0)\nX = rng.uniform(0, 1, 30).reshape(-1, 1)\ny = np.sin(2 * np.pi * X).ravel() + rng.normal(0, 0.2, 30)  # signal + noise\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)\n\nfor degree in [1, 4, 15]:\n    model = make_pipeline(PolynomialFeatures(degree), LinearRegression())\n    model.fit(X_train, y_train)\n    train_err = mean_squared_error(y_train, model.predict(X_train))\n    test_err = mean_squared_error(y_test, model.predict(X_test))\n    print(f\"degree {degree:2d}: train error {train_err:.3f} | test error {test_err:.3f}\")\n# degree 1 underfits, degree 15 overfits: tiny train error, big test error\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "clustering",
+      "title": "Clustering",
+      "summary": "Group unlabeled data with k-means.",
+      "resources": [
+        {
+          "title": "StatQuest: K-means clustering",
+          "url": "https://www.youtube.com/watch?v=4b5d3muPQmA",
+          "type": "video",
+          "minutes": 9
+        },
+        {
+          "title": "Google: What is clustering?",
+          "url": "https://developers.google.com/machine-learning/clustering/overview",
+          "type": "course",
+          "minutes": 45
+        }
+      ],
+      "minutes": 25,
+      "body": [
+        "**Clustering** groups similar items together when you have no labels. Shops use it to find customer segments, and biologists use it to group similar cells.",
+        "The most popular method is **k-means**. You choose `k`, the number of groups. The algorithm drops `k` center points, assigns every data point to its nearest center, moves each center to the middle of its points, and repeats until nothing changes much.",
+        "Think of placing k ice cream stands on a beach. Each sunbather walks to the closest stand; then each stand moves to the middle of its customers. After a few rounds, the stands settle where the crowds are.",
+        "Choosing `k` is up to you. A common trick is the **elbow method**: try several values and watch the **inertia** (how far points are from their centers). It drops sharply until you reach the natural number of groups, then flattens out.",
+        "Keep in mind that clusters have no names. The algorithm only says \"these points are alike\"; a human decides what each group means. K-means also works best when groups are roughly round and similar in size."
+      ],
+      "keyIdeas": [
+        "Clustering finds groups in data without labels.",
+        "k-means repeats: assign points to the nearest center, then move the centers.",
+        "You choose k; the elbow in the inertia curve is a good hint.",
+        "The algorithm finds groups, but humans give them meaning."
+      ],
+      "quiz": [
+        {
+          "q": "In k-means, what happens after each point is assigned to its nearest center?",
+          "options": [
+            "The points get labels from a human",
+            "Each center moves to the average of its assigned points",
+            "k is increased by one",
+            "The data is split into train and test"
+          ],
+          "answer": 1,
+          "explain": "Moving each center to the mean of its points is the update step, repeated until things settle."
+        },
+        {
+          "q": "What does k mean in k-means?",
+          "options": [
+            "The number of features",
+            "The number of training steps",
+            "The number of clusters you ask for"
+          ],
+          "answer": 2,
+          "explain": "k is the number of groups, and you choose it before running the algorithm."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "kmeans.py",
+        "source": "# k-means finds groups in unlabeled points\nimport matplotlib.pyplot as plt\nfrom sklearn.datasets import make_blobs\nfrom sklearn.cluster import KMeans\n\nX, _ = make_blobs(n_samples=200, centers=3, random_state=42)  # ignore the labels\n\nkm = KMeans(n_clusters=3, n_init=10, random_state=0)\nlabels = km.fit_predict(X)\n\nprint(\"Cluster centers:\")\nfor i, c in enumerate(km.cluster_centers_):\n    print(f\"  cluster {i}: ({c[0]:.2f}, {c[1]:.2f}), {sum(labels == i)} points\")\n\n# Inertia = how spread out points are around their center (lower = tighter)\nfor k in [1, 2, 3, 4, 5]:\n    inertia = KMeans(n_clusters=k, n_init=10, random_state=0).fit(X).inertia_\n    print(f\"k={k}: inertia {inertia:8.1f}\")\n\nplt.scatter(X[:, 0], X[:, 1], c=labels, s=15)\nplt.scatter(*km.cluster_centers_.T, c=\"red\", marker=\"x\", s=150)\nplt.title(\"k-means with k=3\")\nplt.show()\n",
+        "runnable": true
+      }
+    },
+    {
+      "slug": "hands-on-with-scikit-learn",
+      "title": "Hands-on with scikit-learn",
+      "summary": "Fit, predict, pipelines and cross-validation on real data.",
+      "resources": [
+        {
+          "title": "scikit-learn: Getting Started",
+          "url": "https://scikit-learn.org/stable/getting_started.html",
+          "type": "docs",
+          "minutes": 20
+        },
+        {
+          "title": "Kaggle Learn: Intro to Machine Learning",
+          "url": "https://www.kaggle.com/learn/intro-to-machine-learning",
+          "type": "course",
+          "minutes": 180
+        }
+      ],
+      "minutes": 35,
+      "body": [
+        "**scikit-learn** is the go-to Python library for classic machine learning. Its secret is a consistent pattern: almost every model has `fit` to learn from data and `predict` to make predictions. Once you learn it for one model, you know it for all of them.",
+        "The usual workflow is: load data into `X` (the features) and `y` (the labels), split it with `train_test_split`, create a model, call `fit` on the training data, then check `score` on the test data.",
+        "A **pipeline** chains steps into one object, for example \"scale the features, then run logistic regression\". It is like a recipe card: everything happens in the right order, and preprocessing is learned only from the training data, which avoids accidentally peeking at the test set.",
+        "**Cross-validation** gives a steadier estimate than a single split. With 5-fold cross-validation, the training data is cut into 5 parts; the model trains on 4 and is checked on the fifth, 5 times over, and you average the scores.",
+        "The code runs this whole workflow on a real medical dataset of 569 breast tumor measurements and ends with an honest test score."
+      ],
+      "keyIdeas": [
+        "Every scikit-learn model follows the same fit / predict / score pattern.",
+        "Pipelines chain preprocessing and a model into one tidy object.",
+        "Cross-validation averages scores over several splits for a fairer estimate.",
+        "Keep the test set untouched until the very end."
+      ],
+      "quiz": [
+        {
+          "q": "Which method trains a scikit-learn model?",
+          "options": [
+            "predict",
+            "score",
+            "fit",
+            "transform"
+          ],
+          "answer": 2,
+          "explain": "fit learns the model's parameters from the training data."
+        },
+        {
+          "q": "In 5-fold cross-validation, how many times is the model trained?",
+          "options": [
+            "5 times",
+            "Once",
+            "10 times"
+          ],
+          "answer": 0,
+          "explain": "Each of the 5 folds takes one turn as the validation part, so the model is trained 5 times."
+        }
+      ],
+      "code": {
+        "lang": "python",
+        "title": "sklearn_workflow.py",
+        "source": "# The full scikit-learn workflow on a real dataset\nfrom sklearn.datasets import load_breast_cancer\nfrom sklearn.model_selection import train_test_split, cross_val_score\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegression\n\nX, y = load_breast_cancer(return_X_y=True)\nprint(\"Data shape:\", X.shape)\n\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=0, stratify=y)\n\n# A pipeline chains steps: scale the features, then classify\nmodel = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))\n\n# Cross-validation: 5 different train/validation splits of the training data\nscores = cross_val_score(model, X_train, y_train, cv=5)\nprint(\"CV accuracy per fold:\", scores.round(3))\nprint(f\"Mean CV accuracy: {scores.mean():.3f}\")\n\n# Final check on the untouched test set\nmodel.fit(X_train, y_train)\nprint(f\"Test accuracy: {model.score(X_test, y_test):.3f}\")\nprint(\"First 5 predictions:\", model.predict(X_test[:5]), \"actual:\", y_test[:5])\n",
+        "runnable": true
+      }
+    }
+  ]
+}
