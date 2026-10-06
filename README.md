@@ -8,7 +8,8 @@ A free, no-sign-up site for learning AI step by step. Learners follow an animate
 - **Database**: `npm run seed` validates the content and loads it into a SQLite database (`data/learnai.db`) with four tables: `stages`, `courses`, `lessons`, `resources`. It uses Node's built-in `node:sqlite`, so there are no native dependencies.
 - **Site**: Next.js (App Router). Every page is pre-rendered from the database at build time.
 - **Code runner**: Python runs with [Pyodide](https://pyodide.org) in a Web Worker (NumPy, pandas, scikit-learn and matplotlib load on demand, and plots show inline). JavaScript runs in a separate worker with no network access. Runs that exceed the time limit are stopped.
-- **Progress** is stored in the browser's localStorage. There are no accounts.
+- **Progress** is stored in the browser's localStorage.
+- **Accounts** (optional): sign up / log in with a username and password at `/register` and `/login`. Passwords are hashed with scrypt; sessions are random tokens in an httpOnly cookie. Users live in a separate writable SQLite file, `data/users.db` (override with `LEARNAI_USERS_DB`). No email verification. Progress is not yet synced to accounts.
 
 ## Develop
 

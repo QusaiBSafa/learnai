@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { resetProgress, useProgress } from '@/lib/progress';
 
 export function Logo() {
@@ -16,8 +16,17 @@ export function Logo() {
   );
 }
 
+function useUser() {
+  const [user, setUser] = useState<{ username: string } | null | undefined>(undefined);
+  useEffect(() => {
+    fetch('/api/auth/me').then((r) => r.json()).then((d) => setUser(d.user ?? null)).catch(() => setUser(null));
+  }, []);
+  return user;
+}
+
 export function Header() {
   const { total } = useProgress();
+  const user = useUser();
   return (
     <header className="site-header">
       <div className="wrap">
@@ -26,6 +35,17 @@ export function Header() {
           <Link href="/#roadmap">Roadmap</Link>
           <Link href="/#courses" className="hide-sm">Courses</Link>
           {total > 0 && <span className="done-pill" title="Lessons you've finished">✓ {total} done</span>}
+          {user ? (
+            <>
+              <span className="muted" style={{ padding: '0 6px' }}>{user.username}</span>
+              <button className="btn small" onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); window.location.reload(); }}>Log out</button>
+            </>
+          ) : user === null ? (
+            <>
+              <Link href="/login">Log in</Link>
+              <Link href="/register" className="btn small primary">Sign up</Link>
+            </>
+          ) : null}
         </nav>
       </div>
     </header>
@@ -38,7 +58,7 @@ export function Footer() {
   return (
     <footer className="site-footer">
       <div className="wrap">
-        <span>LearnAI is free, with no sign-up. Your progress stays in this browser. Resources belong to their creators.</span>
+        <span>LearnAI is free; an account is optional. Your progress stays in this browser. Resources belong to their creators.</span>
         {total > 0 &&
           (confirm ? (
             <span className="row">
