@@ -1,36 +1,38 @@
 import 'server-only';
-import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
 import { randomBytes, scrypt, timingSafeEqual, createHash } from 'node:crypto';
 import { cookies } from 'next/headers';
+import { Pool } from 'pg';
 
-// Accounts live in a separate, writable SQLite file (the content DB is read-only).
-// Set LEARNAI_USERS_DB to put it on a persistent volume.
-const USERS_DB = process.env.LEARNAI_USERS_DB || join(process.cwd(), 'data', 'users.db');
+// Accounts live in Postgres (Neon, Vercel Postgres, ...). Set DATABASE_URL or POSTGRES_URL.
 export const SESSION_COOKIE = 'learnai_session';
 const SESSION_DAYS = 30;
 
-let db: DatabaseSync | null = null;
-function conn() {
-  if (db) return db;
-  mkdirSync(dirname(USERS_DB), { recursive: true });
-  db = new DatabaseSync(USERS_DB);
-  db.exec(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY,
-      username TEXT NOT NULL UNIQUE COLLATE NOCASE,
-      password_hash TEXT NOT NULL,
-      created_at INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS sessions (
-      token_hash TEXT PRIMARY KEY,
-      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      expires_at INTEGER NOT NULL
-    );
-  `);
-  return db;
+let pool: Pool | null = null;
+let ready: Promise<void> | null = null;
+async function db(): Promise<Pool> {
+  if (!pool) {
+    const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    if (!url) throw new Error('DATABASE_URL (or POSTGRES_URL) is not set');
+    pool = new Pool({ connectionString: url, max: 3, ssl: /localhost|127\.0\.0\.1/.test(url) ? undefined : { rejectUnauthorized: false } });
+  }
+  ready ??= pool
+    .query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        created_at BIGINT NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower ON users (LOWER(username));
+      CREATE TABLE IF NOT EXISTS sessions (
+        token_hash TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        expires_at BIGINT NOT NULL
+      );
+    `)
+    .then(() => undefined, (e) => { ready = null; throw e; });
+  await ready;
+  return pool;
 }
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
@@ -73,10 +75,10 @@ export async function registerUser(username: string, password: string): Promise<
   if (bad) return { ok: false, error: bad, status: 400 };
   const hash = await hashPassword(password);
   try {
-    const r = conn().prepare('INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)').run(username, hash, Date.now());
-    return { ok: true, user: { id: Number(r.lastInsertRowid), username } };
+    const r = await (await db()).query('INSERT INTO users (username, password_hash, created_at) VALUES ($1, $2, $3) RETURNING id', [username, hash, Date.now()]);
+    return { ok: true, user: { id: r.rows[0].id, username } };
   } catch (e) {
-    if (String((e as Error).message).includes('UNIQUE')) return { ok: false, error: 'That username is taken.', status: 409 };
+    if ((e as { code?: string }).code === '23505') return { ok: false, error: 'That username is taken.', status: 409 };
     throw e;
   }
 }
@@ -84,7 +86,7 @@ export async function registerUser(username: string, password: string): Promise<
 export async function checkLogin(username: unknown, password: unknown): Promise<AuthResult> {
   const fail: AuthResult = { ok: false, error: 'Wrong username or password.', status: 401 };
   if (typeof username !== 'string' || typeof password !== 'string' || password.length > 200) return fail;
-  const row = conn().prepare('SELECT id, username, password_hash FROM users WHERE username = ?').get(username) as
+  const row = (await (await db()).query('SELECT id, username, password_hash FROM users WHERE LOWER(username) = LOWER($1)', [username])).rows[0] as
     | { id: number; username: string; password_hash: string }
     | undefined;
   const good = await verifyPassword(password, row?.password_hash ?? (await DUMMY_HASH));
@@ -94,8 +96,9 @@ export async function checkLogin(username: unknown, password: unknown): Promise<
 export async function startSession(userId: number) {
   const token = randomBytes(32).toString('base64url');
   const expires = Date.now() + SESSION_DAYS * 864e5;
-  conn().prepare('DELETE FROM sessions WHERE expires_at < ?').run(Date.now());
-  conn().prepare('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)').run(sha256(token), userId, expires);
+  const pg = await db();
+  await pg.query('DELETE FROM sessions WHERE expires_at < $1', [Date.now()]);
+  await pg.query('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES ($1, $2, $3)', [sha256(token), userId, expires]);
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
@@ -108,15 +111,17 @@ export async function startSession(userId: number) {
 export async function endSession() {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
-  if (token) conn().prepare('DELETE FROM sessions WHERE token_hash = ?').run(sha256(token));
+  if (token) await (await db()).query('DELETE FROM sessions WHERE token_hash = $1', [sha256(token)]);
   jar.delete(SESSION_COOKIE);
 }
 
 export async function currentUser(): Promise<User | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  const row = conn()
-    .prepare('SELECT u.id, u.username FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires_at > ?')
-    .get(sha256(token), Date.now()) as User | undefined;
+  const r = await (await db()).query(
+    'SELECT u.id, u.username FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = $1 AND s.expires_at > $2',
+    [sha256(token), Date.now()],
+  );
+  const row = r.rows[0] as User | undefined;
   return row ? { id: row.id, username: row.username } : null;
 }
