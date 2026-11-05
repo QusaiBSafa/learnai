@@ -1,0 +1,471 @@
+{
+ "slug": "fde-integration",
+ "title": "FDE Engineering: Data & Integration",
+ "short": "Integration",
+ "level": "Intermediate",
+ "blurb": "The hands-on engineering of the job: learning unfamiliar systems fast, cleaning messy customer data, SQL, APIs, pipelines, enterprise security and debugging in the field.",
+ "stage": "fde-career",
+ "order": 13,
+ "lessons": [
+  {
+   "slug": "unfamiliar-systems",
+   "title": "Learning an unfamiliar system fast",
+   "summary": "How to map a customer's systems, data flows and access in your first days.",
+   "resources": [
+    {
+     "title": "Palantir: Dev versus Delta, demystifying engineering roles",
+     "url": "https://blog.palantir.com/dev-versus-delta-demystifying-engineering-roles-at-palantir-ad44c2a6e87",
+     "type": "article",
+     "minutes": 10
+    },
+    {
+     "title": "The Twelve-Factor App",
+     "url": "https://12factor.net/",
+     "type": "article",
+     "minutes": 25
+    }
+   ],
+   "minutes": 18,
+   "body": [
+    "On day one at a customer you will face systems you have never seen: an old ERP, a homegrown Java service, a data warehouse, dozens of spreadsheets. Palantir lists **autonomy and technical intuition**, learning new tools on your own, as a core FDE skill. You cannot wait for perfect documentation; there usually isn't any.",
+    "Start by drawing a **system map**: boxes for each system, arrows for data that moves between them, and labels for how it moves (API, nightly CSV export, database replication, a person copy-pasting). Ask \"where does this field come from?\" until you reach the source of truth. The map becomes the shared picture everyone argues about, which is exactly what you want.",
+    "Get **access** early because it is always the slowest step. Make a list of every system, the access level you need (read-only is easier to approve), who approves it and when you asked. Many FDE timelines slip because a firewall rule or service account took three weeks.",
+    "When reading a new codebase, don't read it top to bottom. Find the entry points (the API routes, the scheduled jobs, the main function), follow one real request end to end, and run things. Use logs, a debugger, and search for the names of the fields the business cares about.",
+    "Write down what you learn as you go in a short **environment notes** file: hosts, credentials process (never the secrets themselves), quirks, contacts. It speeds you up next week and becomes part of the handoff."
+   ],
+   "keyIdeas": [
+    "Draw a system map: systems, data flows and how data moves",
+    "Trace every important field back to its source of truth",
+    "Request access on day one and track it; it's the slowest step",
+    "Read code by following one real request end to end"
+   ],
+   "quiz": [
+    {
+     "q": "What's the most effective way to start understanding a large unfamiliar codebase?",
+     "options": [
+      "Read every file alphabetically",
+      "Find an entry point and trace one real request end to end",
+      "Rewrite it in a language you know",
+      "Wait for documentation"
+     ],
+     "answer": 1,
+     "explain": "Following a real path through the system teaches you the parts that matter first."
+    },
+    {
+     "q": "Why ask for read-only access first?",
+     "options": [
+      "It is faster to approve and lower risk",
+      "It is required by law",
+      "Write access doesn't exist",
+      "Read-only is faster to query"
+     ],
+     "answer": 0,
+     "explain": "Security teams approve least-privilege requests much faster."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "system_map.py",
+    "source": "# Model the customer's systems as a graph and answer: where does a field come from,\n# and what breaks downstream if a system goes down?\nfrom collections import deque\n\nflows = [  # (from, to, how)\n    (\"Policy DB (Oracle)\", \"Data warehouse\", \"nightly replication\"),\n    (\"Claims portal\",      \"Claims DB\",      \"API\"),\n    (\"Claims DB\",          \"Data warehouse\", \"nightly CSV export\"),\n    (\"Data warehouse\",     \"Finance report\", \"SQL view\"),\n    (\"Claims DB\",          \"Adjuster sheet\", \"manual copy-paste\"),\n    (\"Adjuster sheet\",     \"Finance report\", \"emailed weekly\"),\n]\n\ndown, up = {}, {}\nfor a, b, how in flows:\n    down.setdefault(a, []).append((b, how))\n    up.setdefault(b, []).append((a, how))\n\ndef walk(graph, start):\n    seen, q, order = {start}, deque([start]), []\n    while q:\n        node = q.popleft()\n        for nxt, how in graph.get(node, []):\n            if nxt not in seen:\n                seen.add(nxt); q.append(nxt); order.append((node, nxt, how))\n    return order\n\nprint(\"Where does the Finance report get its data?\")\nfor a, b, how in walk(up, \"Finance report\"):\n    print(f\"  {b} --[{how}]--> {a}\")\n\nprint(\"\\nIf the Claims DB goes down, what is affected?\")\nfor a, b, how in walk(down, \"Claims DB\"):\n    print(f\"  {b}  (via {how})\")\n\nmanual = [(a, b) for a, b, how in flows if \"manual\" in how or \"email\" in how]\nprint(\"\\nHuman steps worth automating:\", manual)\n",
+    "runnable": true,
+    "note": "The manual and emailed hops are usually where the first quick win is hiding."
+   }
+  },
+  {
+   "slug": "messy-customer-data",
+   "title": "Cleaning messy customer data",
+   "summary": "Dates, duplicates, typos and blanks: making a real export usable with pandas.",
+   "resources": [
+    {
+     "title": "pandas: getting started tutorials",
+     "url": "https://pandas.pydata.org/docs/getting_started/intro_tutorials/index.html",
+     "type": "docs",
+     "minutes": 40
+    }
+   ],
+   "minutes": 22,
+   "body": [
+    "Customer data is never clean. A single export can have three date formats, the same company spelled five ways, duplicate rows from a retry, amounts stored as text with currency symbols, and blanks that mean \"zero\" in one column and \"unknown\" in another. Half of many FDE projects is getting data into a trustworthy shape.",
+    "Work in a fixed order. **Profile** first: row counts, column types, distinct values, blanks. Then **standardise** formats (dates, numbers, casing, whitespace). Then **deduplicate** using a real key, not the whole row. Then **validate** against rules the business agrees with, like \"amount must be positive\" or \"every claim has a policy\".",
+    "Never silently drop data. Put rows that fail validation in a **quarantine** table with the reason, and report the counts. The customer needs to know that 3% of claims have no policy number; that is often a finding in itself and can be worth more than the model.",
+    "Make cleaning a **repeatable script**, not a one-off notebook session. Next week a fresh export arrives, and you want to rerun the same steps and compare the numbers. Keep a short data dictionary that says what each column means and which system it came from.",
+    "pandas is the usual tool for this in Python, and SQL for data that already lives in a database. The code below cleans a small but very realistic claims export."
+   ],
+   "keyIdeas": [
+    "Profile, standardise, deduplicate, then validate, in that order",
+    "Quarantine bad rows with a reason; never drop silently",
+    "Data quality findings are valuable results in their own right",
+    "Make cleaning a repeatable script with a data dictionary"
+   ],
+   "quiz": [
+    {
+     "q": "What should you do with rows that fail validation?",
+     "options": [
+      "Delete them quietly",
+      "Move them to a quarantine table with the reason and report the counts",
+      "Fill them with random values",
+      "Ignore validation"
+     ],
+     "answer": 1,
+     "explain": "Quarantining keeps the data honest and surfaces real problems to the customer."
+    },
+    {
+     "q": "Why deduplicate on a business key rather than the whole row?",
+     "options": [
+      "It's faster to type",
+      "Duplicates often differ slightly, like a retry with a new timestamp",
+      "pandas requires it",
+      "Whole-row matching is illegal"
+     ],
+     "answer": 1,
+     "explain": "Real duplicates rarely match exactly, so you need the key that identifies the record."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "clean_claims.py",
+    "source": "import pandas as pd\n\nraw = pd.DataFrame({\n    \"claim_id\":  [\"C-001\", \"C-002\", \"C-002\", \"c-003\", \"C-004\", \"C-005\", \"C-006\"],\n    \"customer\":  [\" Acme Corp\", \"acme corp.\", \"acme corp.\", \"Globex\", \"GLOBEX \", \"Initech\", None],\n    \"amount\":    [\"$1,200.50\", \"300\", \"300\", \"€450\", \"-20\", \"1,000\", \"75\"],\n    \"filed\":     [\"2026-03-01\", \"03/04/2026\", \"03/04/2026\", \"2026-03-05\", \"2026-03-06\", \"not sure\", \"2026-03-09\"],\n    \"policy_no\": [\"P-9\", \"P-12\", \"P-12\", \"P-3\", \"P-3\", None, \"P-7\"],\n})\nprint(f\"Raw rows: {len(raw)}\")\n\ndf = raw.copy()\ndf[\"claim_id\"] = df[\"claim_id\"].str.upper().str.strip()\ndf[\"customer\"] = (df[\"customer\"].str.strip().str.lower()\n                  .str.replace(r\"[.,]\", \"\", regex=True).str.replace(\" corp\", \"\", regex=False)\n                  .str.title())\ndf[\"amount\"] = pd.to_numeric(df[\"amount\"].str.replace(r\"[^0-9.\\-]\", \"\", regex=True), errors=\"coerce\")\ndf[\"filed\"] = pd.to_datetime(df[\"filed\"], format=\"mixed\", errors=\"coerce\")\n\ndf = df.drop_duplicates(subset=\"claim_id\", keep=\"first\")\n\nrules = {\n    \"missing customer\": df[\"customer\"].isna(),\n    \"missing policy\":   df[\"policy_no\"].isna(),\n    \"bad date\":         df[\"filed\"].isna(),\n    \"non-positive amount\": df[\"amount\"] <= 0,\n}\nreason = pd.Series(\"\", index=df.index)\nfor name, mask in rules.items():\n    reason[mask] = reason[mask] + name + \"; \"\nquarantine = df[reason != \"\"].assign(reason=reason[reason != \"\"])\nclean = df[reason == \"\"]\n\nprint(f\"After dedupe: {len(df)}  clean: {len(clean)}  quarantined: {len(quarantine)}\\n\")\nprint(clean.to_string(index=False))\nprint(\"\\nQuarantine:\")\nprint(quarantine[[\"claim_id\", \"reason\"]].to_string(index=False))\n",
+    "runnable": true,
+    "note": "Note the €450 row: we stripped the symbol but kept it as a number. In a real project you would flag mixed currencies to the customer."
+   }
+  },
+  {
+   "slug": "sql-for-fdes",
+   "title": "SQL for FDEs",
+   "summary": "Joins, aggregations and the queries you'll write every week on customer data.",
+   "resources": [
+    {
+     "title": "SQLBolt: interactive SQL lessons",
+     "url": "https://sqlbolt.com/",
+     "type": "interactive",
+     "minutes": 60
+    },
+    {
+     "title": "Python docs: sqlite3",
+     "url": "https://docs.python.org/3/library/sqlite3.html",
+     "type": "docs",
+     "minutes": 20
+    }
+   ],
+   "minutes": 22,
+   "body": [
+    "Almost every customer keeps its important data in a relational database or warehouse: Postgres, MySQL, SQL Server, Oracle, Snowflake, BigQuery. OpenAI's FDE posting lists experience with relational databases as a requirement, and you will write SQL in nearly every engagement.",
+    "The core you need is small. **SELECT ... WHERE** to filter, **JOIN** to combine tables (and knowing when a **LEFT JOIN** keeps rows that have no match), **GROUP BY** with COUNT, SUM and AVG to summarise, and **ORDER BY** with LIMIT. Add **CTEs** (`WITH name AS (...)`) to break a long query into readable steps, and **window functions** for running totals and rankings.",
+    "On customer systems, query **safely**. Use a read replica or read-only user when you can. Add LIMIT while exploring. Never run an UPDATE or DELETE without a WHERE clause you have tested as a SELECT first, and do it inside a transaction. Always use **parameterised queries** in code instead of pasting values into SQL strings, to avoid SQL injection.",
+    "Good FDE queries answer business questions, so name columns clearly and check the numbers against something the customer already trusts, like last month's finance report. If your total doesn't match theirs, find out why before you show anyone. The difference is often a definition question (\"does 'closed' include rejected claims?\") that you need to settle anyway.",
+    "Python ships with **sqlite3**, a full SQL database in a file or in memory, which makes it perfect for practising. The example builds a tiny claims database and runs the kinds of queries you would show a claims manager."
+   ],
+   "keyIdeas": [
+    "Core SQL: filter, join, group, order; plus CTEs and window functions",
+    "LEFT JOIN keeps rows with no match, which is how you find gaps",
+    "Query safely: read-only users, LIMIT, test writes as SELECTs, parameters",
+    "Reconcile your numbers with a report the customer already trusts"
+   ],
+   "quiz": [
+    {
+     "q": "You want every policy, including ones with no claims. Which join?",
+     "options": [
+      "INNER JOIN",
+      "LEFT JOIN from policies to claims",
+      "CROSS JOIN",
+      "No join is needed"
+     ],
+     "answer": 1,
+     "explain": "A LEFT JOIN keeps all rows from the left table even when there is no matching claim."
+    },
+    {
+     "q": "Why use parameterised queries in code?",
+     "options": [
+      "They run faster on all databases",
+      "They prevent SQL injection by keeping data separate from SQL",
+      "They are required by sqlite",
+      "They make results sorted"
+     ],
+     "answer": 1,
+     "explain": "Parameters stop user-supplied values from being executed as SQL."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "claims_sql.py",
+    "source": "import sqlite3\n\ndb = sqlite3.connect(\":memory:\")\ndb.executescript(\"\"\"\nCREATE TABLE policies (policy_no TEXT PRIMARY KEY, customer TEXT, region TEXT);\nCREATE TABLE claims (claim_id TEXT PRIMARY KEY, policy_no TEXT, amount REAL, status TEXT, days_open INT);\nINSERT INTO policies VALUES ('P-1','Acme','North'),('P-2','Globex','South'),\n                            ('P-3','Initech','North'),('P-4','Umbrella','South');\nINSERT INTO claims VALUES\n  ('C-1','P-1',1200,'paid',6), ('C-2','P-1',300,'open',12), ('C-3','P-2',450,'paid',9),\n  ('C-4','P-2',2000,'rejected',3), ('C-5','P-3',800,'open',15), ('C-6','P-2',150,'paid',4);\n\"\"\")\n\ndef show(title, sql, params=()):\n    cur = db.execute(sql, params)\n    cols = [c[0] for c in cur.description]\n    print(f\"\\n{title}\\n\" + \" | \".join(f\"{c:>11}\" for c in cols))\n    for row in cur:\n        print(\" | \".join(f\"{str(v):>11}\" for v in row))\n\nshow(\"Claims by region\", \"\"\"\n    SELECT p.region, COUNT(c.claim_id) AS claims, SUM(c.amount) AS total, ROUND(AVG(c.days_open), 1) AS avg_days\n    FROM policies p JOIN claims c ON c.policy_no = p.policy_no\n    GROUP BY p.region ORDER BY total DESC\"\"\")\n\nshow(\"Policies with no claims (LEFT JOIN finds gaps)\", \"\"\"\n    SELECT p.policy_no, p.customer FROM policies p\n    LEFT JOIN claims c ON c.policy_no = p.policy_no WHERE c.claim_id IS NULL\"\"\")\n\nshow(\"Slowest open claims, ranked (CTE + window function)\", \"\"\"\n    WITH open_claims AS (SELECT * FROM claims WHERE status = ?)\n    SELECT claim_id, days_open, RANK() OVER (ORDER BY days_open DESC) AS rank FROM open_claims\"\"\",\n    (\"open\",))\n",
+    "runnable": true,
+    "note": "The last query passes 'open' as a parameter (the ?) instead of pasting it into the SQL string."
+   }
+  },
+  {
+   "slug": "apis-and-webhooks",
+   "title": "APIs, auth and webhooks",
+   "summary": "Calling customer APIs reliably: authentication, pagination, retries, idempotency and signed webhooks.",
+   "resources": [
+    {
+     "title": "MDN: An overview of HTTP",
+     "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview",
+     "type": "docs",
+     "minutes": 15
+    },
+    {
+     "title": "Stripe: Designing robust and predictable APIs with idempotency",
+     "url": "https://stripe.com/blog/idempotency",
+     "type": "article",
+     "minutes": 12
+    },
+    {
+     "title": "Okta: An illustrated guide to OAuth and OpenID Connect",
+     "url": "https://developer.okta.com/blog/2019/10/21/illustrated-guide-to-oauth-and-oidc",
+     "type": "article",
+     "minutes": 15
+    },
+    {
+     "title": "GitHub Docs: About webhooks",
+     "url": "https://docs.github.com/en/webhooks/about-webhooks",
+     "type": "docs",
+     "minutes": 8
+    }
+   ],
+   "minutes": 25,
+   "body": [
+    "Most integrations are HTTP **APIs**. You send a request with a method (GET to read, POST to create, PUT or PATCH to update, DELETE to remove), get back a status code and usually JSON. Status codes tell you what to do: **2xx** worked, **4xx** means your request is wrong (fix it, don't retry), **429** means slow down, and **5xx** means the server failed (retry later).",
+    "**Authentication** comes in a few common forms: an **API key** in a header, **OAuth 2.0** where you get a short-lived access token (often with the client-credentials flow for server-to-server jobs), and enterprise **SSO** for users. Store secrets in a secrets manager or environment variables, never in code or chat.",
+    "Real APIs are unreliable, so build for it. Handle **pagination** (cursor or page tokens) instead of assuming one call returns everything. **Retry with exponential backoff and jitter** on 429 and 5xx, with a maximum number of attempts. Respect rate limits. Set timeouts on every call.",
+    "Retries create a danger: doing something twice, like paying a claim twice. **Idempotency keys** solve it. You send a unique key with each create request, and the server returns the original result if it sees the same key again. When you build endpoints, design them to be safe to repeat.",
+    "**Webhooks** are the reverse: the customer's system calls *your* URL when something happens. Verify they are genuine by checking an **HMAC signature** computed with a shared secret, respond quickly, and process the work in the background. Expect duplicates and out-of-order delivery."
+   ],
+   "keyIdeas": [
+    "4xx: fix the request; 429 and 5xx: retry with backoff and jitter",
+    "API keys, OAuth tokens and SSO; secrets never go in code",
+    "Always paginate, set timeouts and respect rate limits",
+    "Idempotency keys make retries safe; verify webhook HMAC signatures"
+   ],
+   "quiz": [
+    {
+     "q": "An API returns 400 Bad Request. What should your client do?",
+     "options": [
+      "Retry immediately in a loop",
+      "Fix the request; retrying the same request won't help",
+      "Wait an hour and retry",
+      "Switch to a different API"
+     ],
+     "answer": 1,
+     "explain": "4xx errors mean the request itself is wrong."
+    },
+    {
+     "q": "What problem do idempotency keys solve?",
+     "options": [
+      "Slow responses",
+      "Duplicate side effects when a request is retried",
+      "Authentication",
+      "Pagination"
+     ],
+     "answer": 1,
+     "explain": "The server recognises the repeated key and does not perform the action twice."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "reliable_client.py",
+    "source": "import hashlib, hmac, json, random\n\nrandom.seed(7)\n\n# --- A fake, flaky customer API -------------------------------------------\nprocessed = {}\ndef fake_api(method, path, body=None, idempotency_key=None):\n    if random.random() < 0.4:\n        return 503, {\"error\": \"temporarily unavailable\"}\n    if idempotency_key in processed:\n        return 200, processed[idempotency_key]          # same result, no double payment\n    result = {\"payment_id\": f\"pay_{len(processed) + 1}\", \"amount\": body[\"amount\"]}\n    processed[idempotency_key] = result\n    return 201, result\n\n# --- Our client: retry with exponential backoff + jitter -------------------\ndef call(method, path, body, key, max_attempts=6, base=0.5):\n    for attempt in range(1, max_attempts + 1):\n        status, data = fake_api(method, path, body, idempotency_key=key)\n        if status < 300:\n            return status, data, attempt\n        if 400 <= status < 500 and status != 429:\n            raise ValueError(f\"Client error {status}: fix the request\")\n        wait = base * 2 ** (attempt - 1) * random.uniform(0.5, 1.5)\n        print(f\"  attempt {attempt}: {status}, would wait {wait:.2f}s\")\n    raise RuntimeError(\"gave up\")\n\nstatus, data, n = call(\"POST\", \"/payments\", {\"amount\": 1200}, key=\"claim-C-001\")\nprint(f\"Paid on attempt {n}: {data}\")\nstatus, data, n = call(\"POST\", \"/payments\", {\"amount\": 1200}, key=\"claim-C-001\")\nprint(f\"Retried same key -> {data}  (payments made: {len(processed)})\")\n\n# --- Verifying a webhook signature -----------------------------------------\nsecret = b\"shared-webhook-secret\"\npayload = json.dumps({\"event\": \"claim.closed\", \"id\": \"C-001\"}).encode()\nsent_sig = hmac.new(secret, payload, hashlib.sha256).hexdigest()\n\ndef verify(body, signature):\n    expected = hmac.new(secret, body, hashlib.sha256).hexdigest()\n    return hmac.compare_digest(expected, signature)\n\nprint(\"\\nGenuine webhook valid?  \", verify(payload, sent_sig))\nprint(\"Tampered webhook valid? \", verify(payload.replace(b\"C-001\", b\"C-999\"), sent_sig))\n",
+    "runnable": true,
+    "note": "Waits are printed instead of slept so the demo runs instantly. In real code you would call time.sleep(wait)."
+   }
+  },
+  {
+   "slug": "data-pipelines",
+   "title": "Building reliable data pipelines",
+   "summary": "Incremental syncs, upserts and schema checks that keep running after you leave.",
+   "resources": [
+    {
+     "title": "The Twelve-Factor App",
+     "url": "https://12factor.net/",
+     "type": "article",
+     "minutes": 25
+    },
+    {
+     "title": "pandas: getting started tutorials",
+     "url": "https://pandas.pydata.org/docs/getting_started/intro_tutorials/index.html",
+     "type": "docs",
+     "minutes": 40
+    }
+   ],
+   "minutes": 22,
+   "body": [
+    "Once you can read from a source and write to a destination, you need it to happen every hour, forever, without you. That is a **data pipeline**, and it is one of the most common things FDEs leave behind.",
+    "The classic pattern is **ETL**: extract, transform, load. Many modern teams do **ELT**: load raw data into a warehouse first and transform it there with SQL, which keeps the raw copy for debugging. Either way, keep stages separate so you can rerun one without the others.",
+    "Don't re-copy everything every run. Use an **incremental sync**: store a **watermark** such as the latest `updated_at` you have seen, and next run ask only for records changed after it. Write with an **upsert** (insert or update by key) so that re-running a batch gives the same result. A pipeline you can safely re-run is **idempotent**, and idempotent pipelines are easy to recover.",
+    "**Validate the schema** at the edge. If a source suddenly sends `amount` as text or drops a column, fail loudly or quarantine the batch instead of quietly loading garbage. Add simple **data quality checks** after loading too: row counts in a normal range, no unexpected nulls in key columns, totals that match the source.",
+    "Finally, make it observable: log each run's watermark, row counts and errors, and alert someone when it fails or stops running. Schedulers like cron, Airflow, Dagster or cloud functions run the job; the design principles are the same everywhere."
+   ],
+   "keyIdeas": [
+    "ETL vs ELT; keep stages separate and re-runnable",
+    "Incremental syncs with a watermark instead of full copies",
+    "Upserts make pipelines idempotent and easy to recover",
+    "Validate schemas at the edge and alert on failures"
+   ],
+   "quiz": [
+    {
+     "q": "What does a watermark store in an incremental sync?",
+     "options": [
+      "The pipeline's author",
+      "The latest change already processed, like the max updated_at",
+      "The database password",
+      "A copy of every row"
+     ],
+     "answer": 1,
+     "explain": "The next run asks only for records changed after the watermark."
+    },
+    {
+     "q": "Why prefer upserts over plain inserts?",
+     "options": [
+      "They're shorter to write",
+      "Re-running a batch won't create duplicates, so the pipeline is idempotent",
+      "They skip validation",
+      "Inserts are deprecated"
+     ],
+     "answer": 1,
+     "explain": "An upsert updates existing keys, so replaying data is safe."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "incremental_sync.py",
+    "source": "# An incremental, idempotent sync with schema validation.\nsource = [  # pretend this is the customer's API\n    {\"id\": 1, \"status\": \"open\",   \"amount\": 100.0, \"updated_at\": \"2026-05-01T10:00\"},\n    {\"id\": 2, \"status\": \"open\",   \"amount\": 250.0, \"updated_at\": \"2026-05-01T11:00\"},\n    {\"id\": 3, \"status\": \"paid\",   \"amount\": 80.0,  \"updated_at\": \"2026-05-01T12:00\"},\n]\nSCHEMA = {\"id\": int, \"status\": str, \"amount\": float, \"updated_at\": str}\n\nwarehouse, quarantine = {}, []\nstate = {\"watermark\": \"\"}\n\ndef validate(rec):\n    for field, typ in SCHEMA.items():\n        if not isinstance(rec.get(field), typ):\n            return f\"{field} should be {typ.__name__}, got {rec.get(field)!r}\"\n    return None\n\ndef run_sync(label):\n    changed = [r for r in source if r[\"updated_at\"] > state[\"watermark\"]]\n    loaded = 0\n    for rec in changed:\n        err = validate(rec)\n        if err:\n            quarantine.append((rec[\"id\"], err)); continue\n        warehouse[rec[\"id\"]] = rec           # upsert by primary key\n        loaded += 1\n    if changed:\n        state[\"watermark\"] = max(r[\"updated_at\"] for r in changed)\n    print(f\"{label}: fetched {len(changed)}, loaded {loaded}, \"\n          f\"warehouse has {len(warehouse)}, watermark {state['watermark']}\")\n\nrun_sync(\"Run 1\")\nrun_sync(\"Run 2 (nothing new)\")\n\nsource[0] = {**source[0], \"status\": \"paid\", \"updated_at\": \"2026-05-02T09:00\"}   # an update\nsource.append({\"id\": 4, \"status\": \"open\", \"amount\": \"1,000\", \"updated_at\": \"2026-05-02T09:30\"})  # bad type\nrun_sync(\"Run 3\")\n\nprint(\"\\nClaim 1 now:\", warehouse[1][\"status\"])\nprint(\"Quarantined:\", quarantine)\n",
+    "runnable": true,
+    "note": "Run 2 fetches nothing, and run 3 updates claim 1 in place instead of duplicating it."
+   }
+  },
+  {
+   "slug": "enterprise-security",
+   "title": "Enterprise security and compliance",
+   "summary": "SSO, least privilege, secrets, PII and the security review you must pass to go live.",
+   "resources": [
+    {
+     "title": "OWASP Top 10 for LLM Applications",
+     "url": "https://genai.owasp.org/llm-top-10/",
+     "type": "docs",
+     "minutes": 20
+    },
+    {
+     "title": "Okta: An illustrated guide to OAuth and OpenID Connect",
+     "url": "https://developer.okta.com/blog/2019/10/21/illustrated-guide-to-oauth-and-oidc",
+     "type": "article",
+     "minutes": 15
+    }
+   ],
+   "minutes": 22,
+   "body": [
+    "In enterprises, nothing goes live until **security** says yes. Half of FDE postings mention security explicitly, and knowing the vocabulary lets you move through reviews in weeks instead of months.",
+    "**Identity**: users log in through the company's **SSO** (SAML or OpenID Connect via Okta, Entra ID and similar), so your app should integrate with it rather than invent passwords. **Least privilege**: every service account gets only the permissions it needs, ideally read-only, scoped to specific tables or folders. **Secrets** live in a secrets manager (AWS Secrets Manager, Vault, Azure Key Vault), rotate regularly and never appear in code, logs or tickets.",
+    "**Data protection**: know what **PII** (personal data like names, emails, ID numbers) and regulated data (health, financial) flows through your system. Encrypt in transit (TLS) and at rest. **Minimise**: don't send fields the model doesn't need, and **redact** sensitive values before they reach logs or third-party APIs. Ask about **data residency** (must data stay in the EU?) and retention.",
+    "**Deployment options** matter to security teams: multi-tenant SaaS, a dedicated instance, the customer's own cloud account (VPC), or fully on-premise. For AI, they will ask whether prompts are used for training, how long they are retained and where models run. Have these answers ready from your company's documentation.",
+    "Expect a **security questionnaire** and evidence such as a SOC 2 or ISO 27001 report. Start the review in week one, not the week before launch. For LLM-specific risks, the **OWASP Top 10 for LLM Applications** is the checklist many security teams use."
+   ],
+   "keyIdeas": [
+    "Integrate with SSO; give service accounts least privilege",
+    "Secrets in a manager, never in code, logs or chat",
+    "Minimise and redact PII before logs or external APIs",
+    "Start the security review in week one; know SOC 2 and OWASP LLM Top 10"
+   ],
+   "quiz": [
+    {
+     "q": "Where should an API key for a customer system be stored?",
+     "options": [
+      "In the source code",
+      "In a secrets manager or environment variable",
+      "In the project README",
+      "In a shared chat channel"
+     ],
+     "answer": 1,
+     "explain": "Secrets managers control access, audit use and support rotation."
+    },
+    {
+     "q": "When should you start the customer's security review?",
+     "options": [
+      "The week before launch",
+      "After the pilot ends",
+      "In the first week of the engagement",
+      "Never, if the model is accurate"
+     ],
+     "answer": 2,
+     "explain": "Reviews often take weeks; starting late is a common cause of missed go-live dates."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "redact_pii.py",
+    "source": "# Redact PII before text is logged or sent to an external model.\nimport re\n\nPATTERNS = [\n    (\"EMAIL\", r\"[\\w.+-]+@[\\w-]+\\.[\\w.]+\"),\n    (\"CARD\",  r\"\\b(?:\\d[ -]?){12,15}\\d\\b\"),\n    (\"PHONE\", r\"\\+?\\d{1,3}[ -]?\\(?\\d{3}\\)?[ -]?\\d{3}[ -]?\\d{4}\\b\"),\n    (\"SSN\",   r\"\\b\\d{3}-\\d{2}-\\d{4}\\b\"),\n]\n\ndef redact(text):\n    found = {}\n    for label, pat in PATTERNS:\n        matches = re.findall(pat, text)\n        if matches:\n            found[label] = len(matches)\n            text = re.sub(pat, f\"[{label}]\", text)\n    return text, found\n\nticket = (\"Hi, I'm Maria (maria.lopez@example.com, +1 415-555-0134). \"\n          \"My card 4111 1111 1111 1111 was charged twice. SSN 123-45-6789 on file.\")\n\nclean, found = redact(ticket)\nprint(\"Original :\", ticket)\nprint(\"Redacted :\", clean)\nprint(\"Found    :\", found)\nprint(\"\\nNote: the name 'Maria' was NOT caught. Regex is a first layer;\")\nprint(\"production systems add named-entity detection and data minimisation.\")\n",
+    "runnable": true,
+    "note": "Regex redaction is a useful first layer, not a complete solution. Say that honestly in security reviews."
+   }
+  },
+  {
+   "slug": "debugging-in-the-field",
+   "title": "Debugging in the field",
+   "summary": "Finding the cause fast with logs, timelines and observability, then writing the postmortem.",
+   "resources": [
+    {
+     "title": "OpenTelemetry: Observability primer",
+     "url": "https://opentelemetry.io/docs/concepts/observability-primer/",
+     "type": "docs",
+     "minutes": 12
+    },
+    {
+     "title": "Google SRE book: Postmortem culture",
+     "url": "https://sre.google/sre-book/postmortem-culture/",
+     "type": "article",
+     "minutes": 20
+    },
+    {
+     "title": "Docker: Get started",
+     "url": "https://docs.docker.com/get-started/",
+     "type": "docs",
+     "minutes": 30
+    }
+   ],
+   "minutes": 22,
+   "body": [
+    "Something breaks in front of the customer: the pipeline didn't run, the assistant is giving wrong answers, the integration returns errors. Palantir describes Deltas monitoring, debugging and configuring software on site. Staying calm and systematic here builds more trust than any demo.",
+    "Follow a loop. **Stabilise** first: if users are affected, roll back or turn the feature off before investigating. **Reproduce**: find one concrete failing case. **Narrow down**: what changed (deploys, config, data, upstream APIs)? Line up a **timeline** of events and look for the first error. **Fix** the cause, then **verify** with the original failing case.",
+    "Good **observability** makes this fast. The three signals are **logs** (events with context), **metrics** (counts and latencies over time) and **traces** (one request's path through several services). Use **structured logs** (JSON with fields like request_id, customer, step) so you can filter them, and give every request an ID you can follow across systems.",
+    "Often you can't touch production directly. Ask for log exports, screen-share with the customer's engineer, or add better logging in the next release. Be specific in what you ask for: a time window and a request ID beat \"send me the logs\".",
+    "After a real incident, write a short **blameless postmortem**: what happened, impact, timeline, root cause, what went well, and action items with owners. Google's SRE practice made this standard. Customers remember how you handled an outage far longer than the outage itself."
+   ],
+   "keyIdeas": [
+    "Stabilise, reproduce, narrow down, fix, verify",
+    "Build a timeline and look for the first error and what changed",
+    "Structured logs, metrics and traces with request IDs",
+    "Write blameless postmortems with owned action items"
+   ],
+   "quiz": [
+    {
+     "q": "Users are seeing errors after a deploy. What's the first step?",
+     "options": [
+      "Start reading the code",
+      "Stabilise: roll back or disable the feature to stop the impact",
+      "Write the postmortem",
+      "Ask users to try again later"
+     ],
+     "answer": 1,
+     "explain": "Stop the damage first, then investigate calmly."
+    },
+    {
+     "q": "Why use structured (JSON) logs with a request ID?",
+     "options": [
+      "They look nicer",
+      "You can filter by fields and follow one request across systems",
+      "They are smaller",
+      "They replace metrics"
+     ],
+     "answer": 1,
+     "explain": "Structured fields and IDs turn log searching from guesswork into a query."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "incident_timeline.py",
+    "source": "# Find when errors started and what changed just before.\nimport json\nfrom collections import Counter\n\nlog_lines = \"\"\"\n{\"t\": \"09:00\", \"level\": \"info\",  \"event\": \"request\", \"status\": 200}\n{\"t\": \"09:01\", \"level\": \"info\",  \"event\": \"request\", \"status\": 200}\n{\"t\": \"09:02\", \"level\": \"info\",  \"event\": \"deploy\",  \"version\": \"v1.8.0\"}\n{\"t\": \"09:02\", \"level\": \"info\",  \"event\": \"request\", \"status\": 200}\n{\"t\": \"09:03\", \"level\": \"info\",  \"event\": \"config\",  \"change\": \"CRM_API_URL updated\"}\n{\"t\": \"09:03\", \"level\": \"error\", \"event\": \"request\", \"status\": 502, \"upstream\": \"crm\"}\n{\"t\": \"09:04\", \"level\": \"error\", \"event\": \"request\", \"status\": 502, \"upstream\": \"crm\"}\n{\"t\": \"09:04\", \"level\": \"info\",  \"event\": \"request\", \"status\": 200}\n{\"t\": \"09:05\", \"level\": \"error\", \"event\": \"request\", \"status\": 502, \"upstream\": \"crm\"}\n\"\"\"\nevents = [json.loads(l) for l in log_lines.strip().splitlines()]\n\nper_minute = Counter()\ntotals = Counter()\nfor e in events:\n    if e[\"event\"] == \"request\":\n        totals[e[\"t\"]] += 1\n        per_minute[e[\"t\"]] += e[\"status\"] >= 500\nprint(\"minute  errors/requests\")\nfor t in sorted(totals):\n    print(f\"{t}   {per_minute[t]}/{totals[t]}  {'!' * per_minute[t]}\")\n\nfirst_error = next(e for e in events if e[\"level\"] == \"error\")\nchanges = [e for e in events if e[\"event\"] in (\"deploy\", \"config\") and e[\"t\"] <= first_error[\"t\"]]\nprint(f\"\\nFirst error at {first_error['t']} (upstream: {first_error['upstream']})\")\nprint(\"Changes before it, most recent first:\")\nfor c in reversed(changes):\n    print(\"  \", c[\"t\"], c[\"event\"], c.get(\"version\") or c.get(\"change\"))\nprint(\"\\nPrime suspect: the CRM URL config change, since errors all come from the crm upstream.\")\n",
+    "runnable": true,
+    "note": "Real logs are far bigger, but the method is the same: align errors with changes on one timeline."
+   }
+  }
+ ]
+}

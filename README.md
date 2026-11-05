@@ -1,6 +1,6 @@
 # LearnAI
 
-A free, no-sign-up site for learning AI step by step. Learners follow an animated roadmap of 11 courses (75 lessons). Each lesson has a short plain-English explanation, key ideas, hand-picked free resources, a two-question check, and code that runs right in the browser.
+A free, no-sign-up site for learning AI step by step. Learners follow an animated roadmap of 15 courses (103 lessons), including a four-course Forward Deployed Engineer career track. Each lesson has a short plain-English explanation, key ideas, hand-picked free resources, a two-question check, and code that runs right in the browser.
 
 ## How it works
 

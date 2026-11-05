@@ -18,5 +18,10 @@
     "slug": "ship-it-safely",
     "title": "Ship it safely",
     "order": 4
+  },
+  {
+    "slug": "fde-career",
+    "title": "Career: Forward Deployed Engineer",
+    "order": 5
   }
 ]

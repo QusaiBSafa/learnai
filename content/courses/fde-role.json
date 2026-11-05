@@ -1,0 +1,470 @@
+{
+ "slug": "fde-role",
+ "title": "The Forward Deployed Engineer",
+ "short": "FDE Role",
+ "level": "Intermediate",
+ "blurb": "What FDEs at Palantir, OpenAI and Anthropic really do, and the core skill of the job: turning a vague customer problem into a scoped, measurable project.",
+ "stage": "fde-career",
+ "order": 12,
+ "lessons": [
+  {
+   "slug": "what-is-an-fde",
+   "title": "What is a Forward Deployed Engineer?",
+   "summary": "The role Palantir invented and AI labs made famous: one customer, many capabilities.",
+   "resources": [
+    {
+     "title": "Palantir: Dev versus Delta, demystifying engineering roles",
+     "url": "https://blog.palantir.com/dev-versus-delta-demystifying-engineering-roles-at-palantir-ad44c2a6e87",
+     "type": "article",
+     "minutes": 10
+    },
+    {
+     "title": "Palantir: Who wants to be a Delta?",
+     "url": "https://blog.palantir.com/who-wants-to-be-a-delta-8d2ea948035",
+     "type": "article",
+     "minutes": 8
+    },
+    {
+     "title": "The Forward Deployed Engineer Playbook (DEV Community)",
+     "url": "https://dev.to/truongpx396/the-forward-deployed-engineer-playbook-23d9",
+     "type": "article",
+     "minutes": 20
+    }
+   ],
+   "minutes": 15,
+   "body": [
+    "A **Forward Deployed Engineer (FDE)** is a software engineer who works directly with a customer, often on site, to make a product actually solve that customer's problem. The title comes from **Palantir**, which split its engineers into \"Devs\" who build the core platform and \"Deltas\" who deploy it inside one customer at a time.",
+    "Palantir sums up the difference in one line: a product engineer builds **one capability for many customers**, while an FDE delivers **many capabilities for one customer**. The FDE is measured by the customer's outcome, not by how many features they shipped.",
+    "It helps to compare the FDE with nearby roles. A **sales engineer** wins the deal with demos and then hands off. A **consultant** often delivers a report or a one-time analysis. A **support engineer** fixes problems after the fact. An FDE writes real production code, lives with the customer's messy data and systems, and stays until the thing works and is used.",
+    "A typical week is mixed. Some days are almost pure coding and code review. Other days are spent scoping a project with an executive, shadowing the people who do the work, debugging a deployment in the customer's cloud, or writing up what the core product team should build next. Travel of **25 to 50%** is common in job postings.",
+    "This track teaches the whole job in four courses: the role and problem scoping, the integration engineering, shipping AI solutions, and delivery and career. Each lesson ends with code you can run here, modelled on a real FDE task."
+   ],
+   "keyIdeas": [
+    "FDEs are engineers embedded with one customer to deliver an outcome",
+    "Palantir: Devs build one capability for many customers, Deltas many capabilities for one customer",
+    "Unlike sales engineers or consultants, FDEs ship and own production code",
+    "The job mixes coding, scoping, debugging in the field and feeding learnings back to product"
+   ],
+   "quiz": [
+    {
+     "q": "Which description best fits a Forward Deployed Engineer?",
+     "options": [
+      "Builds one platform feature used by every customer",
+      "Embeds with a customer and writes production code until their problem is solved",
+      "Runs sales demos and hands off after the contract is signed",
+      "Writes a strategy report and leaves"
+     ],
+     "answer": 1,
+     "explain": "FDEs own the customer outcome and write real code inside the customer's environment."
+    },
+    {
+     "q": "How is an FDE's success usually measured?",
+     "options": [
+      "Lines of code written",
+      "Number of meetings attended",
+      "Impact on the customer's goal",
+      "Number of features added to the core product"
+     ],
+     "answer": 2,
+     "explain": "Palantir and OpenAI both describe FDE success in terms of the customer outcome, not output."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "fde_week.py",
+    "source": "# A realistic FDE week, based on the time splits in public FDE playbooks.\nweek = {\n    \"Building inside the customer's systems\": 45,\n    \"Scoping, workshops and advising\": 25,\n    \"Contributing back to the core product\": 15,\n    \"Evals and tuning\": 10,\n    \"Writing docs and sharing knowledge\": 5,\n}\n\nprint(\"Where an FDE's time goes (percent of a week)\\n\")\nfor task, pct in week.items():\n    print(f\"{task:<42} {'#' * (pct // 2)} {pct}%\")\n\nhours = 45\ncoding = week[\"Building inside the customer's systems\"] + week[\"Evals and tuning\"]\nprint(f\"\\nIn a {hours}-hour week that's about {hours * coding // 100} hours of hands-on engineering\")\nprint(f\"and {hours - hours * coding // 100} hours of talking, scoping, writing and teaching.\")\n",
+    "runnable": true,
+    "note": "The numbers are typical ranges from public FDE writeups, not a fixed rule."
+   }
+  },
+  {
+   "slug": "the-ai-fde",
+   "title": "Why AI companies hire FDEs",
+   "summary": "The gap between a capable model and real business value, and what job postings actually ask for.",
+   "resources": [
+    {
+     "title": "FDE skills employers ask for: a 2026 job-posting analysis",
+     "url": "https://interviewkickstart.com/blogs/articles/forward-deployed-engineer-skills-job-posting-analysis",
+     "type": "article",
+     "minutes": 12
+    },
+    {
+     "title": "Anthropic careers: Forward Deployed Engineer posting",
+     "url": "https://www.anthropic.com/careers/jobs/4985877008",
+     "type": "article",
+     "minutes": 6
+    },
+    {
+     "title": "OpenAI careers: Forward Deployed Software Engineer posting",
+     "url": "https://openai.com/careers/forward-deployed-software-engineer-sf/",
+     "type": "article",
+     "minutes": 6
+    }
+   ],
+   "minutes": 15,
+   "body": [
+    "Modern AI models are powerful, but a model on its own does not process insurance claims or answer a bank's support tickets. Someone has to connect it to the customer's data, wrap it in a workflow, prove it is accurate, get security to approve it, and train staff to use it. That gap between **model capability** and **business value** is mostly engineering and people work, and it is why OpenAI, Anthropic, Scale, Cohere and many startups now hire FDEs.",
+    "Real postings are consistent. Anthropic asks FDEs to build production applications with Claude inside customer systems, deliver artifacts such as **MCP servers, sub-agents and agent skills**, and feed repeatable patterns back to Product and Engineering. OpenAI asks them to run technical discovery, write **scopes of work** for prototypes and production, and code side by side with customer teams on the customer's infrastructure.",
+    "An analysis of 14 FDE postings from 2026 found the most requested skills were **stakeholder communication** (93%), **production coding** (86%), **LLM or agent development** (86%), **customer discovery** (79%), owning **adoption** (71%) and **APIs and integrations** (64%). Cloud, data systems, security and evals followed.",
+    "Notice the mix: roughly half the list is technical and half is about people and outcomes. Strong Python, SQL and API skills get you in the door. Being able to run a discovery session, write a clear plan and own a rollout is what separates an FDE from a regular backend engineer.",
+    "Postings usually want several years of engineering experience, often customer-facing, and many say former founders are welcome. If you are earlier in your career, the fastest way in is a portfolio of end-to-end projects built for a real user, which the last course of this track walks you through."
+   ],
+   "keyIdeas": [
+    "Models alone don't create value; integration, evals and adoption do",
+    "AI-lab FDEs build agents, RAG, tools and MCP servers inside customer systems",
+    "Top requested skills: communication, production coding, LLM work and discovery",
+    "Half the job is technical, half is people and outcomes"
+   ],
+   "quiz": [
+    {
+     "q": "According to the 2026 posting analysis, which skill was mentioned most often?",
+     "options": [
+      "Fine-tuning models",
+      "Stakeholder communication",
+      "Kubernetes",
+      "Frontend design"
+     ],
+     "answer": 1,
+     "explain": "Stakeholder communication appeared in about 93% of postings, more than any technical skill."
+    },
+    {
+     "q": "Which artifact does Anthropic's FDE posting specifically mention?",
+     "options": [
+      "Marketing slide decks",
+      "MCP servers, sub-agents and agent skills",
+      "Mobile apps",
+      "Hardware prototypes"
+     ],
+     "answer": 1,
+     "explain": "The posting lists MCP servers, sub-agents and agent skills as deliverables for customer workflows."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "skill_gap.py",
+    "source": "# How often each skill appears in FDE job postings (share of 14 postings, 2026)\ndemand = {\n    \"Stakeholder communication\": 93, \"Production coding\": 86,\n    \"LLM / agent development\": 86, \"Customer discovery\": 79,\n    \"Adoption ownership\": 71, \"APIs & integrations\": 64,\n    \"Cloud infrastructure\": 57, \"Data systems\": 50, \"Security\": 50,\n    \"Evaluations\": 36, \"Observability\": 29,\n}\n\n# Rate yourself 0-5 on each skill. Edit these numbers and run again!\nme = {\n    \"Stakeholder communication\": 2, \"Production coding\": 3,\n    \"LLM / agent development\": 2, \"Customer discovery\": 1,\n    \"Adoption ownership\": 1, \"APIs & integrations\": 3,\n    \"Cloud infrastructure\": 2, \"Data systems\": 3, \"Security\": 1,\n    \"Evaluations\": 1, \"Observability\": 1,\n}\n\n# Gap = how much the market wants it x how far you are from 5\ngaps = sorted(((demand[s] * (5 - me[s]), s) for s in demand), reverse=True)\nprint(\"Your biggest gaps, weighted by market demand:\\n\")\nfor score, skill in gaps[:5]:\n    print(f\"  {skill:<28} demand {demand[skill]:>3}%   you {me[skill]}/5   priority {score}\")\nprint(\"\\nThis track covers all of them: course 1 (discovery), 2 (integration),\")\nprint(\"3 (LLM work, evals, security) and 4 (communication, adoption).\")\n",
+    "runnable": true,
+    "note": "Change the numbers in `me` to your own ratings to get a personal study plan."
+   }
+  },
+  {
+   "slug": "engagement-lifecycle",
+   "title": "The life of an engagement",
+   "summary": "From first meeting to handoff: the phases every FDE project goes through.",
+   "resources": [
+    {
+     "title": "The Forward Deployed Engineer Playbook (DEV Community)",
+     "url": "https://dev.to/truongpx396/the-forward-deployed-engineer-playbook-23d9",
+     "type": "article",
+     "minutes": 20
+    },
+    {
+     "title": "Palantir: Who wants to be a Delta?",
+     "url": "https://blog.palantir.com/who-wants-to-be-a-delta-8d2ea948035",
+     "type": "article",
+     "minutes": 8
+    }
+   ],
+   "minutes": 18,
+   "body": [
+    "Every FDE engagement follows roughly the same arc, even if companies name the phases differently. Knowing where you are tells you what \"done\" looks like this week.",
+    "**1. Insertion.** In the first days you learn the business: who does the work, what systems they use, where the manual workarounds and spreadsheets are, and who has power. You watch before you build. **2. Discovery.** You find the highest-leverage problem: one that matters to many people and that you can visibly solve fast. You agree on how success will be measured.",
+    "**3. Prototype.** You build a thin, working slice on the customer's real data, often in days, to prove the approach and earn trust. **4. Production.** You harden it: integrations, security review, monitoring, evals, error handling and a rollout plan. **5. Adoption.** You train users, watch usage, fix friction and keep improving. **6. Handoff.** You leave behind a running system, runbooks, an eval suite and a trained internal owner.",
+    "Each phase needs an **exit criterion** you can check, for example \"the champion agrees the prototype answers 8 of 10 real cases correctly\". Moving on without one is how projects drift for months. OpenAI describes the ideal as the FDE **working themselves out of a job**: if the same customer keeps needing you for the same problem, something was not really solved.",
+    "Engagements also have economics. The faster a customer reaches value, the more likely they renew and expand. That is why FDEs push for quick visible wins and are wary of vague projects with no champion, no data access or a purely political blocker."
+   ],
+   "keyIdeas": [
+    "Phases: insertion, discovery, prototype, production, adoption, handoff",
+    "Every phase needs a checkable exit criterion",
+    "Win trust early with a small, visible fix on real data",
+    "Leave behind a running system, evals, runbooks and an owner"
+   ],
+   "quiz": [
+    {
+     "q": "What should happen before you move from prototype to production?",
+     "options": [
+      "Nothing, keep coding",
+      "Meet a pre-agreed exit criterion, such as accuracy on real cases signed off by the champion",
+      "Wait for the contract to renew",
+      "Rewrite everything in a new language"
+     ],
+     "answer": 1,
+     "explain": "Checkable exit criteria stop projects from drifting between phases."
+    },
+    {
+     "q": "What does a good handoff include?",
+     "options": [
+      "Only the source code",
+      "A slide deck",
+      "A running system, runbooks, evals and a trained internal owner",
+      "A promise to come back next year"
+     ],
+     "answer": 2,
+     "explain": "Without evals and an owner, a deployed system degrades soon after the FDE leaves."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "engagement.py",
+    "source": "# Track an engagement through its phases. A phase is done only when every\n# exit criterion is met.\nphases = [\n    (\"Insertion\",  [\"met the end users\", \"mapped current workflow\", \"got data access\"]),\n    (\"Discovery\",  [\"picked one high-leverage problem\", \"agreed success metric\", \"baseline measured\"]),\n    (\"Prototype\",  [\"works on real data\", \"champion signed off\"]),\n    (\"Production\", [\"security review passed\", \"monitoring live\", \"eval suite in CI\"]),\n    (\"Adoption\",   [\"users trained\", \"weekly active users >= 50% of target\"]),\n    (\"Handoff\",    [\"runbook written\", \"internal owner named\"]),\n]\n\ndone = {\n    \"met the end users\", \"mapped current workflow\", \"got data access\",\n    \"picked one high-leverage problem\", \"agreed success metric\",\n    # \"baseline measured\" is missing!\n    \"works on real data\",\n}\n\nfor name, criteria in phases:\n    missing = [c for c in criteria if c not in done]\n    if missing:\n        print(f\"Current phase: {name}\")\n        print(\"Blocked on:\", \", \".join(missing))\n        break\n    print(f\"[x] {name}\")\nelse:\n    print(\"Engagement complete. You've worked yourself out of a job!\")\n",
+    "runnable": true,
+    "note": "Notice the prototype was started before the baseline was measured: the tracker still holds you in Discovery."
+   }
+  },
+  {
+   "slug": "customer-discovery",
+   "title": "Customer discovery that finds the real problem",
+   "summary": "How to interview users so they tell you facts, not polite opinions.",
+   "resources": [
+    {
+     "title": "The Mom Test: book notes by Michael Lynch",
+     "url": "https://mtlynch.io/book-reports/the-mom-test/",
+     "type": "article",
+     "minutes": 15
+    },
+    {
+     "title": "Nielsen Norman Group: User interviews 101",
+     "url": "https://www.nngroup.com/articles/user-interviews/",
+     "type": "article",
+     "minutes": 12
+    }
+   ],
+   "minutes": 20,
+   "body": [
+    "Customers rarely ask for what they need. An executive might say \"we want a chatbot\" when the real pain is that claims adjusters spend three hours a day copying data between two systems. **Discovery** is the skill of finding that real pain, and job postings list it in nearly 80% of FDE roles.",
+    "The best-known guide is **The Mom Test** by Rob Fitzpatrick. Its rule: ask about the person's **life and past behaviour**, not your idea. \"Would you use an AI tool for this?\" invites a polite yes. \"Walk me through the last time you processed a claim\" gets facts. Good questions are about specifics in the past: what happened, how long it took, what it cost, what they already tried.",
+    "Go to where the work happens. **Shadow** the people doing the task and watch for spreadsheets, copy-paste, sticky notes and \"I just know\" steps. Those are the places where software and AI can help. Count things: how many cases per day, minutes per case, error rate, cost of a mistake. Numbers turn a complaint into a business case.",
+    "Talk to several kinds of people. The **end user** knows the workflow. The **manager** knows the metrics. **IT and security** know what you are allowed to touch. The **executive sponsor** knows why the company is paying. Their answers will conflict, and finding those conflicts early saves months.",
+    "End each session by summarising what you heard and checking it: \"So the main cost is the 40 minutes per claim spent re-typing data, is that right?\" Then write it down. Discovery notes become the problem statement, the success metric and later the eval set."
+   ],
+   "keyIdeas": [
+    "Ask about past behaviour and specifics, not opinions about your idea",
+    "Shadow the work and look for spreadsheets, copy-paste and workarounds",
+    "Quantify: volume, time per task, error rate, cost of errors",
+    "Interview users, managers, IT and sponsors, and surface their conflicts"
+   ],
+   "quiz": [
+    {
+     "q": "Which is the best discovery question?",
+     "options": [
+      "Would you love an AI assistant for this?",
+      "Walk me through the last invoice you processed, step by step.",
+      "Don't you think this process is slow?",
+      "How much would you pay for our product?"
+     ],
+     "answer": 1,
+     "explain": "It asks about a specific past event, which produces facts rather than polite opinions."
+    },
+    {
+     "q": "Why count things like cases per day and minutes per case?",
+     "options": [
+      "To fill time in meetings",
+      "To turn a complaint into a measurable business case and baseline",
+      "Because the contract requires it",
+      "To decide which model to use"
+     ],
+     "answer": 1,
+     "explain": "Numbers give you the baseline your success metric and ROI will be measured against."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "question_checker.py",
+    "source": "# Score discovery questions using Mom Test rules of thumb.\nimport re\n\nBAD = {\n    r\"\\bwould you\\b\": \"asks about a hypothetical future\",\n    r\"\\bdo you think\\b|\\bdon't you think\\b\": \"asks for an opinion\",\n    r\"\\b(love|like) (our|an|a|this)\\b\": \"fishes for compliments\",\n    r\"\\bhow much would you pay\\b\": \"asks them to predict a price\",\n}\nGOOD = {\n    r\"\\blast time\\b\": \"anchors on a real past event\",\n    r\"\\bwalk me through\\b\": \"gets the real workflow\",\n    r\"\\bhow (long|often|many)\\b\": \"gets numbers\",\n    r\"\\bwhat (have you|did you) tried?\\b|\\bwhat did you try\\b\": \"finds existing workarounds\",\n}\n\ndef check(question):\n    q = question.lower()\n    bad = [why for pat, why in BAD.items() if re.search(pat, q)]\n    good = [why for pat, why in GOOD.items() if re.search(pat, q)]\n    verdict = \"GOOD\" if good and not bad else \"REWRITE\" if bad else \"OK\"\n    return verdict, good + bad\n\nquestions = [\n    \"Would you use an AI tool that summarises claims?\",\n    \"Walk me through the last claim you processed.\",\n    \"How long does it take to copy data into the policy system?\",\n    \"Don't you think this process is really slow?\",\n    \"What did you try last time to speed this up?\",\n]\nfor q in questions:\n    verdict, reasons = check(q)\n    print(f\"[{verdict:^7}] {q}\")\n    for r in reasons:\n        print(f\"           - {r}\")\n",
+    "runnable": true,
+    "note": "Add your own questions to the list. Simple patterns can't judge everything, but they catch the classic mistakes."
+   }
+  },
+  {
+   "slug": "problem-decomposition",
+   "title": "Decomposing ambiguous problems",
+   "summary": "Turning \"use AI to fix our operations\" into small, ranked workstreams.",
+   "resources": [
+    {
+     "title": "Anthropic: Building effective agents",
+     "url": "https://www.anthropic.com/engineering/building-effective-agents",
+     "type": "article",
+     "minutes": 20
+    },
+    {
+     "title": "Palantir: Dev versus Delta, demystifying engineering roles",
+     "url": "https://blog.palantir.com/dev-versus-delta-demystifying-engineering-roles-at-palantir-ad44c2a6e87",
+     "type": "article",
+     "minutes": 10
+    }
+   ],
+   "minutes": 20,
+   "body": [
+    "**Problem decomposition** is the skill FDE interviewers test hardest. OpenAI's process includes a dedicated decomposition case study, and Palantir calls it \"technical decomposition\": breaking a high-level business problem into a designed solution.",
+    "Start from the **outcome**, not the technology. \"Reduce the time to settle a claim from 10 days to 5\" is an outcome. Then build an **issue tree**: what are the stages of the process, where does time go, and which of those stages could software, data or a model improve? Keep splitting until each leaf is something one person could build and test in a week or two.",
+    "Then rank the leaves. A simple and useful score is **impact × confidence ÷ effort**. Impact is how much of the outcome it moves. Confidence is how sure you are it will work (is the data available? is the task well defined?). Effort is engineering time plus the time to get approvals. Pick the top one or two and say clearly what you are *not* doing yet.",
+    "Not every leaf needs AI. Often the biggest win is a plain integration that removes re-typing, and the model is only one step in a larger workflow. Anthropic's guidance on agents makes the same point: start with the simplest solution that works and add complexity only when it clearly helps.",
+    "In an interview or a workshop, **think out loud**. Clarify the goal, state assumptions, sketch the tree, rank it, and propose a first milestone. Interviewers care more about this structured reasoning than about the exact answer."
+   ],
+   "keyIdeas": [
+    "Start from a measurable outcome, not a technology",
+    "Build an issue tree until leaves are one- to two-week tasks",
+    "Rank with impact x confidence / effort and name what you won't do",
+    "Many top wins are plain integrations; AI is one step in a workflow"
+   ],
+   "quiz": [
+    {
+     "q": "A customer says \"we want AI for our claims team\". What should you do first?",
+     "options": [
+      "Pick the largest model available",
+      "Clarify the outcome they want, such as cutting settlement time, and map the process",
+      "Start fine-tuning on their data",
+      "Build a chatbot demo"
+     ],
+     "answer": 1,
+     "explain": "Decomposition starts with the outcome and the current process, not the technology."
+    },
+    {
+     "q": "Using impact x confidence / effort, which task ranks higher? A: impact 8, confidence 0.5, effort 4. B: impact 5, confidence 0.9, effort 1.",
+     "options": [
+      "A",
+      "B",
+      "They are equal"
+     ],
+     "answer": 1,
+     "explain": "A scores 8 x 0.5 / 4 = 1.0; B scores 5 x 0.9 / 1 = 4.5, so B ranks higher."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "issue_tree.py",
+    "source": "# Decompose \"cut claim settlement time from 10 days to 5\" and rank the leaves.\ntree = {\n    \"Cut settlement time 10d -> 5d\": {\n        \"Intake (2.5 days)\": {\n            \"Auto-extract fields from claim PDFs\": dict(impact=7, confidence=0.8, effort=3, ai=True),\n            \"Sync intake form straight to policy system\": dict(impact=6, confidence=0.9, effort=1, ai=False),\n        },\n        \"Assessment (5 days)\": {\n            \"Summarise claim history for adjusters\": dict(impact=5, confidence=0.7, effort=2, ai=True),\n            \"Auto-approve low-risk claims\": dict(impact=9, confidence=0.4, effort=6, ai=True),\n        },\n        \"Payout (2.5 days)\": {\n            \"Batch payments daily instead of weekly\": dict(impact=6, confidence=0.95, effort=1, ai=False),\n        },\n    }\n}\n\ndef leaves(node, path=()):\n    for name, child in node.items():\n        if \"impact\" in child:\n            yield path + (name,), child\n        else:\n            yield from leaves(child, path + (name,))\n\ndef show(node, depth=0):\n    for name, child in node.items():\n        print(\"  \" * depth + (\"- \" if depth else \"\") + name)\n        if \"impact\" not in child:\n            show(child, depth + 1)\n\nshow(tree)\nranked = sorted(leaves(tree), key=lambda x: -x[1][\"impact\"] * x[1][\"confidence\"] / x[1][\"effort\"])\nprint(\"\\nRanked by impact x confidence / effort:\")\nfor path, s in ranked:\n    score = s[\"impact\"] * s[\"confidence\"] / s[\"effort\"]\n    tag = \"AI \" if s[\"ai\"] else \"   \"\n    print(f\"  {score:4.1f}  {tag} {path[-1]}\")\n",
+    "runnable": true,
+    "note": "The top two ideas need no AI at all. That is common, and saying so builds trust."
+   }
+  },
+  {
+   "slug": "scoping-and-metrics",
+   "title": "Scoping work and defining success",
+   "summary": "Writing a scope of work, picking a success metric and building the ROI case.",
+   "resources": [
+    {
+     "title": "Design docs at Google",
+     "url": "https://www.industrialempathy.com/posts/design-docs-at-google/",
+     "type": "article",
+     "minutes": 15
+    },
+    {
+     "title": "OpenAI careers: Forward Deployed Software Engineer posting",
+     "url": "https://openai.com/careers/forward-deployed-software-engineer-sf/",
+     "type": "article",
+     "minutes": 6
+    }
+   ],
+   "minutes": 20,
+   "body": [
+    "Once you know the problem, write it down as a **scope of work**. OpenAI's FDE posting names this directly: FDEs write scopes and project plans for both prototypes and production deployments. A good scope fits on one or two pages: the problem, the users, what will be built, what is **out of scope**, the timeline, who must provide what (data, access, people), and how success will be measured.",
+    "Pick **one primary success metric** tied to the business, such as minutes per claim, percentage of tickets resolved without a human, or forecast error. Add a few **guardrail metrics** that must not get worse, like error rate or customer satisfaction. Measure the **baseline** before you build, or you will never be able to prove you helped.",
+    "Be clear about the stage. A **proof of concept** answers \"can this work at all?\" on a sample of real data in days or weeks. A **pilot** puts it in front of a small group of real users. **Production** means it is integrated, monitored, secure and owned. Customers often hear \"POC worked\" as \"it's ready\", so state what each stage does and does not prove.",
+    "Executives decide with numbers, so build a simple **ROI** case: hours saved times loaded hourly cost, plus error costs avoided, minus model, infrastructure and maintenance costs. Show the **payback period**. Use conservative assumptions and say what they are; an honest small number beats an inflated big one that collapses later.",
+    "Finally, time-box. A two-week prototype with a fixed demo date focuses everyone. Scope creep is the most common way engagements fail, and a written scope is your best defence when someone asks for \"just one more thing\"."
+   ],
+   "keyIdeas": [
+    "A scope covers problem, users, deliverables, non-goals, timeline, dependencies and metrics",
+    "One primary business metric plus guardrails, with a measured baseline",
+    "POC, pilot and production prove different things; say which you are in",
+    "Build a conservative ROI with a payback period"
+   ],
+   "quiz": [
+    {
+     "q": "Why measure a baseline before building?",
+     "options": [
+      "It's a legal requirement",
+      "Without it you can't show how much your solution improved things",
+      "It makes the model more accurate",
+      "Baselines replace evals"
+     ],
+     "answer": 1,
+     "explain": "Improvement is always relative to where the customer started."
+    },
+    {
+     "q": "What does a successful proof of concept prove?",
+     "options": [
+      "The system is ready for all users",
+      "The approach can work on real data",
+      "Security has approved it",
+      "The ROI is guaranteed"
+     ],
+     "answer": 1,
+     "explain": "A POC answers feasibility; a pilot and production answer usability, scale and safety."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "roi.py",
+    "source": "# A conservative ROI model for automating part of claims intake.\nclaims_per_month   = 4_000\nminutes_saved_each = 12        # measured in the pilot, not guessed\nadoption           = 0.7       # not everyone will use it on day one\nloaded_cost_per_hr = 55        # salary + benefits + overhead\nerror_cost_avoided = 1_500     # per month, from fewer re-typing mistakes\n\nbuild_cost         = 60_000    # one-time: FDE time, integration, security review\nrun_cost_per_month = 2_500     # model API + hosting + maintenance\n\nhours_saved = claims_per_month * minutes_saved_each / 60 * adoption\nmonthly_benefit = hours_saved * loaded_cost_per_hr + error_cost_avoided\nmonthly_net = monthly_benefit - run_cost_per_month\npayback_months = build_cost / monthly_net\n\nprint(f\"Hours saved per month : {hours_saved:,.0f}\")\nprint(f\"Monthly benefit       : ${monthly_benefit:,.0f}\")\nprint(f\"Monthly net           : ${monthly_net:,.0f}\")\nprint(f\"Payback period        : {payback_months:.1f} months\")\nprint(f\"First-year net value  : ${monthly_net * 12 - build_cost:,.0f}\")\n\nprint(\"\\nSensitivity: what if adoption is lower?\")\nfor a in (0.3, 0.5, 0.7, 0.9):\n    net = claims_per_month * minutes_saved_each / 60 * a * loaded_cost_per_hr + error_cost_avoided - run_cost_per_month\n    print(f\"  adoption {a:.0%}: payback {build_cost / net:5.1f} months\")\n",
+    "runnable": true,
+    "note": "The sensitivity table shows why adoption is a core FDE responsibility: it drives the whole ROI."
+   }
+  },
+  {
+   "slug": "stakeholders-and-trust",
+   "title": "Stakeholders, champions and trust",
+   "summary": "Mapping who matters, finding a champion and earning trust in the first weeks.",
+   "resources": [
+    {
+     "title": "Atlassian: RACI chart guide",
+     "url": "https://www.atlassian.com/work-management/project-management/raci-chart",
+     "type": "article",
+     "minutes": 10
+    },
+    {
+     "title": "The Forward Deployed Engineer Playbook (DEV Community)",
+     "url": "https://dev.to/truongpx396/the-forward-deployed-engineer-playbook-23d9",
+     "type": "article",
+     "minutes": 20
+    }
+   ],
+   "minutes": 18,
+   "body": [
+    "Technology rarely kills an engagement; people do. A project with a working model can still fail because IT never approved access, the end users were never asked, or the sponsor changed jobs. FDEs manage this deliberately.",
+    "Start with a **stakeholder map**. List everyone involved and place them on a grid of **influence** (can they block or approve?) and **interest** (do they care about the outcome?). High influence, high interest people you manage closely. High influence, low interest people, often security or procurement, you keep satisfied with short, early updates so they never surprise you.",
+    "Find a **champion**: someone inside the customer who wants this to succeed, has credibility with users and can open doors. The best champion is usually the line-of-business owner whose team will use the tool, not the person who signed the contract. Projects without a champion stall.",
+    "Make roles explicit with a **RACI** (Responsible, Accountable, Consulted, Informed) for key decisions like data access, go-live and success sign-off. It sounds bureaucratic, but it prevents the classic \"I thought you were doing that\" weeks.",
+    "Earn trust early. Fix something small and visible in the first week, even if it is not the main project. Be honest about limits, especially with AI: say plainly what the model gets wrong. Under-promise, over-deliver, and always follow up when you said you would. Trust is what lets you say no to scope creep later."
+   ],
+   "keyIdeas": [
+    "Map stakeholders by influence and interest",
+    "Find a champion, usually the owner of the team that will use it",
+    "Use a RACI for data access, go-live and sign-off",
+    "Earn trust with a quick visible win and honest limits"
+   ],
+   "quiz": [
+    {
+     "q": "The security lead has high influence but little interest in your project. How should you treat them?",
+     "options": [
+      "Ignore them until go-live",
+      "Keep them satisfied with short, early updates so there are no surprises",
+      "Make them the champion",
+      "Copy them on every email"
+     ],
+     "answer": 1,
+     "explain": "Low-interest, high-influence stakeholders can block go-live, so involve them early and briefly."
+    },
+    {
+     "q": "Who usually makes the best champion?",
+     "options": [
+      "The procurement officer",
+      "The line-of-business owner whose team will use the tool",
+      "Your own sales rep",
+      "The newest intern"
+     ],
+     "answer": 1,
+     "explain": "They care about the outcome and have credibility with the users."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "stakeholder_map.py",
+    "source": "# Place stakeholders on an influence / interest grid and get a plan for each.\npeople = [\n    # name, role, influence 1-10, interest 1-10\n    (\"Dana\", \"VP Claims (sponsor)\",      9, 8),\n    (\"Sam\",  \"Claims team lead\",          6, 9),\n    (\"Lee\",  \"CISO\",                      9, 3),\n    (\"Ana\",  \"Adjuster (end user)\",       3, 8),\n    (\"Raj\",  \"Procurement\",               5, 2),\n    (\"Kim\",  \"Data platform engineer\",    6, 6),\n]\n\ndef quadrant(infl, inter):\n    if infl >= 6 and inter >= 6: return \"Manage closely\"\n    if infl >= 6:                return \"Keep satisfied\"\n    if inter >= 6:               return \"Keep informed\"\n    return \"Monitor\"\n\nplan = {\n    \"Manage closely\": \"weekly 1:1, involve in decisions\",\n    \"Keep satisfied\": \"short early briefings, no surprises\",\n    \"Keep informed\":  \"demos and feedback sessions\",\n    \"Monitor\":        \"monthly update email\",\n}\n\nfor name, role, infl, inter in sorted(people, key=lambda p: -(p[2] + p[3])):\n    q = quadrant(infl, inter)\n    print(f\"{name:<5}{role:<26} {q:<15} -> {plan[q]}\")\n\nchampion = max((p for p in people if quadrant(p[2], p[3]) == \"Manage closely\" and \"user\" not in p[1]),\n               key=lambda p: p[3])\nprint(f\"\\nLikely champion: {champion[0]} ({champion[1]}), the most invested person who can act.\")\n",
+    "runnable": true,
+    "note": "Real maps are judgement calls; the grid just makes your assumptions visible so you can discuss them."
+   }
+  }
+ ]
+}

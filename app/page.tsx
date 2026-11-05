@@ -31,7 +31,7 @@ export default function Home() {
           Learn AI one <span className="hl">station</span> at a time.
         </h1>
         <p className="lede">
-          Follow one roadmap from &ldquo;what is AI?&rdquo; to building RAG apps and agents. Every lesson explains the idea in plain words, links the
+          Follow one roadmap from &ldquo;what is AI?&rdquo; to building RAG apps and agents, and on to a full Forward Deployed Engineer career track. Every lesson explains the idea in plain words, links the
           best free resource for it, and gives you code to run right here.
         </p>
         <div className="row">

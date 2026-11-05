@@ -1,0 +1,482 @@
+{
+ "slug": "fde-delivery",
+ "title": "FDE Delivery, Communication & Career",
+ "short": "Delivery",
+ "level": "Advanced",
+ "blurb": "The skills that make FDEs trusted: demos that land, clear writing, hard conversations, feeding the product team, driving adoption, interview prep and a full capstone engagement.",
+ "stage": "fde-career",
+ "order": 15,
+ "lessons": [
+  {
+   "slug": "demos-that-land",
+   "title": "Demos that land",
+   "summary": "Show the user's own workflow, on their own data, with honest limits.",
+   "resources": [
+    {
+     "title": "Nielsen Norman Group: User interviews 101",
+     "url": "https://www.nngroup.com/articles/user-interviews/",
+     "type": "article",
+     "minutes": 12
+    },
+    {
+     "title": "The Forward Deployed Engineer Playbook (DEV Community)",
+     "url": "https://dev.to/truongpx396/the-forward-deployed-engineer-playbook-23d9",
+     "type": "article",
+     "minutes": 20
+    }
+   ],
+   "minutes": 15,
+   "body": [
+    "FDEs demo constantly: to win the next phase, to get users excited, to unblock an executive decision. A good demo is not a feature tour. It is **a story about the customer's problem being solved**, told with their data and in their words.",
+    "Structure it simply. **1. The problem**, in numbers they gave you: \"adjusters spend 40 minutes re-typing each claim\". **2. The new workflow**, shown live, end to end, with a real case they recognise. **3. The result**: time saved, accuracy from the eval, what it means for the business. **4. What's next** and what you need from them, such as access, a decision or users for a pilot.",
+    "Use **their data**. A demo on a public sample is forgettable; a demo on last Tuesday's claim makes people lean in. Have the champion or an end user drive it when possible, because their peers trust them more than you.",
+    "Prepare for failure. AI outputs vary, so rehearse the cases, have a recorded backup, and decide in advance what you'll say if it gets something wrong. Being honest, \"this is a case it still misses, and here's how we're fixing it\", builds more trust than a perfect-looking demo that later disappoints.",
+    "Keep it short: 10 to 15 minutes of demo, then discussion. Watch who reacts to what; the questions people ask in a demo are excellent discovery."
+   ],
+   "keyIdeas": [
+    "A demo is a story: problem, new workflow, result, next step",
+    "Use the customer's own data and let their people drive",
+    "Rehearse, keep a backup, and be honest about failures",
+    "End with a clear ask: access, a decision or pilot users"
+   ],
+   "quiz": [
+    {
+     "q": "What makes a demo most convincing to a customer?",
+     "options": [
+      "A tour of every feature",
+      "Their own workflow solved on their own data",
+      "Lots of technical architecture slides",
+      "A very long presentation"
+     ],
+     "answer": 1,
+     "explain": "People believe what they recognise: their data and their problem."
+    },
+    {
+     "q": "During a demo the model gets a case wrong. Best response?",
+     "options": [
+      "Pretend it's correct",
+      "Acknowledge it, explain it's a known gap and how you're addressing it",
+      "End the meeting",
+      "Blame the data"
+     ],
+     "answer": 1,
+     "explain": "Honesty about limits builds lasting trust."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "demo_plan.py",
+    "source": "# Build a demo run-sheet from your discovery notes and eval results.\ndiscovery = {\"customer\": \"Northwind Insurance\", \"user\": \"claims adjusters\",\n             \"pain\": \"re-typing claim PDFs into the policy system\",\n             \"minutes_per_claim\": 40, \"claims_per_month\": 4000}\nresults = {\"minutes_after\": 12, \"field_accuracy\": 0.94, \"known_gap\": \"handwritten forms\"}\nask = \"read access to the policy API and 5 adjusters for a 2-week pilot\"\n\nsaved_hours = (discovery[\"minutes_per_claim\"] - results[\"minutes_after\"]) * discovery[\"claims_per_month\"] / 60\nsheet = [\n    (\"2 min\", \"Problem\", f\"{discovery['user'].capitalize()} spend {discovery['minutes_per_claim']} min per claim {discovery['pain']}.\"),\n    (\"6 min\", \"Live demo\", \"Sam (team lead) drives: upload last Tuesday's real claim -> fields filled -> review -> submit.\"),\n    (\"3 min\", \"Results\", f\"{results['minutes_after']} min per claim, {results['field_accuracy']:.0%} field accuracy on 200 real claims, ~{saved_hours:,.0f} hours/month saved.\"),\n    (\"2 min\", \"Honest limits\", f\"Still weak on {results['known_gap']}; those go to manual review for now.\"),\n    (\"2 min\", \"The ask\", ask[0].upper() + ask[1:] + \".\"),\n]\nprint(f\"Demo run-sheet: {discovery['customer']}\\n\")\nfor t, part, line in sheet:\n    print(f\"[{t:>5}] {part:<14} {line}\")\nprint(\"\\nBackup: screen recording of the full flow, in case the live run fails.\")\n",
+    "runnable": true,
+    "note": "Edit the numbers and names to plan a demo for your own project."
+   }
+  },
+  {
+   "slug": "writing-for-customers",
+   "title": "Writing that moves decisions",
+   "summary": "Design docs, weekly updates and decision logs that busy people actually read.",
+   "resources": [
+    {
+     "title": "Design docs at Google",
+     "url": "https://www.industrialempathy.com/posts/design-docs-at-google/",
+     "type": "article",
+     "minutes": 15
+    },
+    {
+     "title": "OpenAI careers: Forward Deployed Software Engineer posting",
+     "url": "https://openai.com/careers/forward-deployed-software-engineer-sf/",
+     "type": "article",
+     "minutes": 6
+    }
+   ],
+   "minutes": 18,
+   "body": [
+    "FDEs write a lot: scopes, design docs, status updates, eval reports, handoff runbooks, and feedback for the product team. OpenAI's posting asks FDEs to document best practices and customer insights. Clear writing is how one engineer keeps a dozen stakeholders aligned.",
+    "Lead with the point. Use **BLUF** (bottom line up front): the first sentence says the status, the decision needed or the conclusion. \"We're on track for the pilot on June 3; we need security sign-off by May 28.\" Details come after, for those who want them.",
+    "A **weekly status update** has a fixed shape so people can skim: overall status (**green, amber or red**), what was done, what's next, **risks and blockers** with owners and dates, and **decisions needed**. Amber and red are not failures; hiding them is. Raise a risk early while it's still cheap to fix.",
+    "A **design doc** explains the context, goals and non-goals, the proposed design, **alternatives considered** and why they were rejected, and open questions. Google's engineering culture uses them to get feedback before code is written; at a customer they also become the record of what was agreed.",
+    "Keep a **decision log**: date, decision, who decided, why. Months later, when someone asks \"why didn't we use an agent?\", you have the answer. Write for the reader who wasn't in the meeting, avoid jargon with executives, and cut every sentence that doesn't help them act."
+   ],
+   "keyIdeas": [
+    "Bottom line up front: status or decision in the first sentence",
+    "Weekly updates: RAG status, done, next, risks, decisions needed",
+    "Design docs include goals, non-goals and alternatives considered",
+    "Keep a decision log; write for the person who wasn't there"
+   ],
+   "quiz": [
+    {
+     "q": "What should the first sentence of a status update contain?",
+     "options": [
+      "A greeting and the weather",
+      "The overall status and any decision needed",
+      "A list of every task",
+      "Technical details of the model"
+     ],
+     "answer": 1,
+     "explain": "BLUF lets busy readers act after one sentence."
+    },
+    {
+     "q": "A key dependency is at risk of slipping. When should it appear in your update?",
+     "options": [
+      "Only once it actually slips",
+      "Now, as a risk with an owner and date",
+      "Never, fix it quietly",
+      "In the final report"
+     ],
+     "answer": 1,
+     "explain": "Early warnings are cheap to act on; surprises destroy trust."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "status_update.py",
+    "source": "# Generate a skimmable weekly update from your tracker.\nfrom datetime import date\n\ntasks = [\n    {\"task\": \"PDF field extraction\",     \"state\": \"done\"},\n    {\"task\": \"Policy API integration\",   \"state\": \"done\"},\n    {\"task\": \"Eval set: 200 claims\",     \"state\": \"done\"},\n    {\"task\": \"Security review\",          \"state\": \"in_progress\", \"due\": date(2026, 5, 28)},\n    {\"task\": \"Pilot onboarding (5 users)\", \"state\": \"todo\",      \"due\": date(2026, 6, 3)},\n]\nrisks = [{\"risk\": \"Security review waiting on data-flow diagram\", \"owner\": \"You\", \"by\": date(2026, 5, 22)}]\ndecisions = [\"Approve pilot users: Sam to nominate 5 adjusters by May 24\"]\n\ntoday = date(2026, 5, 20)\nlate = [t for t in tasks if t.get(\"due\") and t[\"due\"] < today and t[\"state\"] != \"done\"]\nstatus = \"RED\" if late else \"AMBER\" if risks else \"GREEN\"\n\nprint(f\"Subject: Claims automation, week of {today:%b %d}: {status}\\n\")\nprint(f\"Bottom line: {status}. Pilot on track for Jun 03 if security signs off by May 28.\\n\")\nprint(\"Done this week:\")\nfor t in tasks:\n    if t[\"state\"] == \"done\": print(\"  -\", t[\"task\"])\nprint(\"Next:\")\nfor t in tasks:\n    if t[\"state\"] != \"done\": print(f\"  - {t['task']} (due {t['due']:%b %d})\")\nprint(\"Risks:\")\nfor r in risks: print(f\"  - {r['risk']} | owner: {r['owner']} | by {r['by']:%b %d}\")\nprint(\"Decisions needed:\")\nfor d in decisions: print(\"  -\", d)\n",
+    "runnable": true,
+    "note": "Same structure every week means stakeholders learn where to look."
+   }
+  },
+  {
+   "slug": "hard-conversations",
+   "title": "Scope creep and hard conversations",
+   "summary": "Saying no, handling change requests and delivering bad news well.",
+   "resources": [
+    {
+     "title": "Amazon leadership principles (customer obsession, ownership)",
+     "url": "https://www.amazon.jobs/content/en/our-workplace/leadership-principles",
+     "type": "article",
+     "minutes": 10
+    },
+    {
+     "title": "Google SRE book: Postmortem culture",
+     "url": "https://sre.google/sre-book/postmortem-culture/",
+     "type": "article",
+     "minutes": 20
+    }
+   ],
+   "minutes": 18,
+   "body": [
+    "Every engagement has hard moments: a sponsor asks for \"just one more feature\" a week before the pilot, a dataset turns out to be unusable, a deadline will slip, or the model simply can't reach the accuracy someone promised. Anthropic's posting asks for the ability to balance competing priorities **with integrity**; this is where that shows.",
+    "Handle **new requests** with a simple rule: never a flat no, never a silent yes. Say \"yes, and here's the trade-off\". Estimate the effort, show what it would push out or delay, and let the right person choose. Write it down as a **change request** so the scope document stays true.",
+    "Deliver **bad news early, directly and with a plan**. \"The handwritten forms are only 60% accurate. I recommend we route them to manual review for the pilot and revisit after we collect 300 labelled examples. Do you agree?\" Bad news plus options is a decision; bad news alone is a problem dumped on someone.",
+    "When someone is upset, listen first and restate their concern before answering. Separate the **person** from the **problem**. Escalate when you need to, through your own manager or account lead, and tell the customer you're doing it; escalation is a tool, not a betrayal.",
+    "Be careful with promises, especially about AI. Avoid \"it will be 99% accurate\"; say \"on 200 real claims it was 94% accurate, and here's how we'll track it\". Under-promising is part of protecting the customer's trust in you."
+   ],
+   "keyIdeas": [
+    "New requests: 'yes, and here's the trade-off', written as a change request",
+    "Bad news early, directly, with a recommendation and options",
+    "Listen and restate before responding; escalate openly when needed",
+    "Promise measured results, not guesses"
+   ],
+   "quiz": [
+    {
+     "q": "A sponsor asks for a new feature a week before the pilot. Best response?",
+     "options": [
+      "Agree and work all weekend",
+      "Refuse flatly",
+      "Explain the effort and what it would delay, and let them choose",
+      "Ignore the request"
+     ],
+     "answer": 2,
+     "explain": "Making the trade-off visible lets the right person decide."
+    },
+    {
+     "q": "Which way of sharing bad news is best?",
+     "options": [
+      "Wait until it can't be hidden",
+      "Share it early with a recommendation and options",
+      "Tell only your manager",
+      "Send it late on Friday"
+     ],
+     "answer": 1,
+     "explain": "Early news with options turns a problem into a decision."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "change_request.py",
+    "source": "# Evaluate a change request against the current plan before answering.\ncapacity_days = 10            # engineering days left before the pilot\nplan = [(\"Security fixes\", 3, \"must\"), (\"Pilot onboarding\", 2, \"must\"),\n        (\"Eval expansion\", 3, \"should\"), (\"UI polish\", 2, \"could\")]\n\nrequest = (\"Export to Excel button\", 3)\n\ndef fit(plan, request, capacity):\n    name, days = request\n    used = sum(d for _, d, _ in plan)\n    free = capacity - used\n    print(f\"Request: {name} ({days} days). Free capacity: {free} days.\")\n    if days <= free:\n        print(\"  It fits without dropping anything.\")\n        return\n    need = days - free\n    print(f\"  Need to free {need} days. Options:\")\n    optional = sorted((p for p in plan if p[2] != \"must\"), key=lambda x: x[1])\n    singles = [p for p in optional if p[1] >= need]\n    if singles:\n        for item, d, prio in singles:\n            print(f\"   - defer '{item}' ({prio}, {d} days)\")\n    elif sum(p[1] for p in optional) >= need:\n        print(\"   - defer \" + \" and \".join(f\"'{p[0]}'\" for p in optional))\n    print(\"   - or move the pilot date by\", need, \"days\")\n    print(\"  Alternative: add it to phase 2 and keep the pilot date.\")\n\nfit(plan, request, capacity_days)\n",
+    "runnable": true,
+    "note": "Showing the trade-off as a list turns an awkward 'no' into a choice for the customer."
+   }
+  },
+  {
+   "slug": "product-feedback-loop",
+   "title": "Feeding the product team",
+   "summary": "Turning field pain into product improvements, and deciding build vs customise.",
+   "resources": [
+    {
+     "title": "Palantir: Dev versus Delta, demystifying engineering roles",
+     "url": "https://blog.palantir.com/dev-versus-delta-demystifying-engineering-roles-at-palantir-ad44c2a6e87",
+     "type": "article",
+     "minutes": 10
+    },
+    {
+     "title": "Anthropic careers: Forward Deployed Engineer posting",
+     "url": "https://www.anthropic.com/careers/jobs/4985877008",
+     "type": "article",
+     "minutes": 6
+    }
+   ],
+   "minutes": 18,
+   "body": [
+    "FDEs are the company's eyes inside customers. Anthropic asks FDEs to identify **repeatable deployment patterns** and share them with Product and Engineering; OpenAI's FDEs relay deployment friction and model gaps to Product and Research. Palantir's Deltas often write code that goes back into the core platform.",
+    "Good feedback is **specific and evidenced**. Not \"the model is bad at code\" but \"on our COBOL-to-Java migration, the model fails on these three patterns in 30% of files; here are 20 examples\". OpenAI has described exactly this kind of targeted report helping research teams improve models. Include the customer impact, frequency, workaround and examples.",
+    "Look for **patterns across customers**. One customer's request is an anecdote; the same request from five customers worth a large share of revenue is a roadmap item. Keep a shared log of field requests tagged by theme so product managers can see the totals.",
+    "Then make the **build vs customise** call, which Palantir highlights as a key judgment: should this need be built into the core product for everyone, or solved quickly with custom code for this customer? Custom work is fast but creates maintenance; product work is slower but compounds. If you've built the same thing three times, it belongs in the product.",
+    "Close the loop with the customer too: tell them when their feedback shipped. It shows they are heard and makes them more willing to give feedback next time."
+   ],
+   "keyIdeas": [
+    "Feedback must be specific: examples, frequency, impact, workaround",
+    "Aggregate requests across customers to find real patterns",
+    "Build vs customise: built it three times? It belongs in the product",
+    "Tell customers when their feedback ships"
+   ],
+   "quiz": [
+    {
+     "q": "Which piece of feedback is most useful to a product team?",
+     "options": [
+      "'Customers don't like it'",
+      "'5 customers need SSO group sync; 3 built workarounds; examples attached'",
+      "'Make it better'",
+      "'The model is slow sometimes'"
+     ],
+     "answer": 1,
+     "explain": "It is specific, shows frequency and impact, and includes evidence."
+    },
+    {
+     "q": "You've written the same custom connector for three customers. What now?",
+     "options": [
+      "Write it a fourth time",
+      "Propose it as a core product feature",
+      "Stop helping customers",
+      "Delete the old ones"
+     ],
+     "answer": 1,
+     "explain": "Repeated custom work signals a product gap."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "feedback_ranker.py",
+    "source": "# Aggregate field feedback across customers and rank themes for the product team.\nfrom collections import defaultdict\n\nfeedback = [  # (customer, annual contract $k, theme, has_workaround)\n    (\"Northwind\", 900, \"SSO group sync\", True),\n    (\"Contoso\",   400, \"SSO group sync\", True),\n    (\"Fabrikam\",  250, \"SSO group sync\", False),\n    (\"Northwind\", 900, \"PDF table extraction\", False),\n    (\"Globex\",    600, \"PDF table extraction\", False),\n    (\"Initech\",   150, \"Dark mode\", False),\n    (\"Umbrella\",  700, \"Audit log export\", False),\n    (\"Contoso\",   400, \"Audit log export\", True),\n    (\"Globex\",    600, \"SSO group sync\", True),\n]\n\nthemes = defaultdict(lambda: {\"customers\": set(), \"arr\": 0, \"workarounds\": 0})\nfor cust, arr, theme, workaround in feedback:\n    t = themes[theme]\n    if cust not in t[\"customers\"]:\n        t[\"customers\"].add(cust)\n        t[\"arr\"] += arr\n    t[\"workarounds\"] += workaround\n\nranked = sorted(themes.items(), key=lambda kv: (-kv[1][\"arr\"], -len(kv[1][\"customers\"])))\nprint(f\"{'theme':<22}{'customers':>10}{'ARR $k':>9}{'workarounds':>13}\")\nfor theme, t in ranked:\n    print(f\"{theme:<22}{len(t['customers']):>10}{t['arr']:>9}{t['workarounds']:>13}\")\ntop, t = ranked[0]\nprint(f\"\\nTop ask: '{top}' from {len(t['customers'])} customers (${t['arr']}k ARR); \"\n      f\"{t['workarounds']} already built workarounds -> strong product candidate.\")\n",
+    "runnable": true,
+    "note": "Count each customer once per theme so one loud customer can't dominate the ranking."
+   }
+  },
+  {
+   "slug": "adoption-and-handoff",
+   "title": "Driving adoption and handing off",
+   "summary": "Usage is the real success metric. Train champions and work yourself out of a job.",
+   "resources": [
+    {
+     "title": "The Forward Deployed Engineer Playbook (DEV Community)",
+     "url": "https://dev.to/truongpx396/the-forward-deployed-engineer-playbook-23d9",
+     "type": "article",
+     "minutes": 20
+    },
+    {
+     "title": "Hamel Husain: Your AI product needs evals",
+     "url": "https://hamel.dev/blog/posts/evals/",
+     "type": "article",
+     "minutes": 25
+    }
+   ],
+   "minutes": 18,
+   "body": [
+    "A system nobody uses has zero value, however good the model. Over 70% of FDE postings list **adoption** as part of the job. Deployment is not done at go-live; it is done when people use it every day and the customer can run it without you.",
+    "Measure usage directly: **weekly active users** against the target group, **retention** (do people who tried it come back?), the share of eligible work that goes through the new system, and quality signals such as how often users edit or reject outputs. Pair numbers with conversations: sit with users and watch where they hesitate.",
+    "Adoption problems are usually **workflow** problems. The tool adds a step, lives in a separate tab, or users don't trust it. Fix friction (put it where they already work), build trust (show sources, explain confidence), and train in short sessions with real cases. **Champions** inside each team who answer questions and share tips spread adoption faster than any email.",
+    "Plan the **handoff** from the start. Leave behind: a running, monitored system; **runbooks** for common issues (what to do when the pipeline fails, how to update a prompt safely); the **eval suite** and how to run it; documentation of architecture and decisions; and a named, trained **internal owner**. Without evals and an owner, quality decays soon after you leave.",
+    "OpenAI describes the goal well: the FDE should **work themselves out of a job**. Then you take what you learned to the next customer and to the product team."
+   ],
+   "keyIdeas": [
+    "Adoption, not go-live, is the real finish line",
+    "Track weekly active users, retention and share of work in the system",
+    "Fix workflow friction, build trust, train champions",
+    "Handoff: runbooks, evals, docs and a named internal owner"
+   ],
+   "quiz": [
+    {
+     "q": "Usage is low a month after launch. What's most likely to help?",
+     "options": [
+      "A bigger model",
+      "Watch users, remove workflow friction and train champions",
+      "Send a stern email",
+      "Turn it off"
+     ],
+     "answer": 1,
+     "explain": "Low adoption is usually about workflow and trust, not model quality."
+    },
+    {
+     "q": "Which item is essential in a handoff so quality doesn't decay?",
+     "options": [
+      "A farewell party",
+      "The eval suite plus a named internal owner",
+      "More slides",
+      "A new contract"
+     ],
+     "answer": 1,
+     "explain": "Someone must own the system and be able to measure its quality."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "adoption.py",
+    "source": "# Compute weekly active users and week-over-week retention from usage logs.\nfrom collections import defaultdict\n\nteam_size = 20\nevents = [  # (week, user)\n    (1,\"ana\"),(1,\"ben\"),(1,\"cy\"),(1,\"dee\"),(1,\"eli\"),(1,\"fay\"),\n    (2,\"ana\"),(2,\"ben\"),(2,\"dee\"),(2,\"gus\"),(2,\"hal\"),\n    (3,\"ana\"),(3,\"ben\"),(3,\"dee\"),(3,\"gus\"),(3,\"ivy\"),(3,\"jo\"),(3,\"kai\"),\n    (4,\"ana\"),(4,\"ben\"),(4,\"dee\"),(4,\"gus\"),(4,\"ivy\"),(4,\"jo\"),(4,\"kai\"),(4,\"lu\"),(4,\"max\"),(4,\"ned\"),\n]\nweeks = defaultdict(set)\nfor w, u in events:\n    weeks[w].add(u)\n\nprint(\"week  WAU  adoption  retained from last week\")\nfor w in sorted(weeks):\n    users = weeks[w]\n    prev = weeks.get(w - 1, set())\n    retained = f\"{len(users & prev) / len(prev):.0%}\" if prev else \"-\"\n    bar = \"#\" * len(users)\n    print(f\"{w:>4} {len(users):>4}  {len(users) / team_size:>7.0%}   {retained:>6}   {bar}\")\n\nchurned = weeks[1] - weeks[4]\nprint(f\"\\nTried in week 1 but gone by week 4: {sorted(churned)} -> go talk to them!\")\nprint(\"Target: 80% of the team weekly. Gap:\", int(team_size * 0.8) - len(weeks[4]), \"users\")\n",
+    "runnable": true,
+    "note": "The churned users are the best source of discovery: they tried it and decided it wasn't worth it."
+   }
+  },
+  {
+   "slug": "fde-interviews",
+   "title": "Landing the FDE job",
+   "summary": "How FDE interviews work, the portfolio that gets you hired and how to practise.",
+   "resources": [
+    {
+     "title": "Tech Interview Handbook: Behavioral interviews",
+     "url": "https://www.techinterviewhandbook.org/behavioral-interview/",
+     "type": "article",
+     "minutes": 20
+    },
+    {
+     "title": "Exponent: Forward deployed engineer resume guide",
+     "url": "https://www.tryexponent.com/blog/forward-deployed-engineer-resume",
+     "type": "article",
+     "minutes": 12
+    },
+    {
+     "title": "KDnuggets: 7 steps to become a forward deployed engineer in 2026",
+     "url": "https://www.kdnuggets.com/7-steps-to-become-a-forward-deployed-engineer-in-2026",
+     "type": "article",
+     "minutes": 10
+    }
+   ],
+   "minutes": 20,
+   "body": [
+    "FDE hiring tests three things roughly equally: **technical depth**, **deployment thinking** and **client-facing communication**. OpenAI's process, for example, runs a recruiter screen, a coding assessment, a **decomposition case study** and a hiring-manager conversation. The decomposition round is often the most selective: you get a vague customer problem and must clarify scope and reason out loud before you design or code.",
+    "Expect these rounds in some form: **practical coding** (usually Python, building something realistic like a small API client or data transform, not puzzles), **system design** for a customer scenario (\"design a document Q&A system for a law firm with strict data residency\"), a **customer role-play** (an upset stakeholder, a scope dispute), and **behavioural** questions about ownership, ambiguity and working with difficult people.",
+    "For behavioural answers use **STAR**: Situation, Task, Action, Result, with numbers in the result. Prepare five or six stories that cover: a time you owned an outcome end to end, handled ambiguity, delivered bad news, disagreed with a customer or manager, learned a new system fast, and shipped something that failed and what you did.",
+    "Your **portfolio** matters more than credentials, especially if you lack FDE experience. Build two or three end-to-end projects for a **real user**, even a friend's small business or a local nonprofit: discovery notes, a scope, a working system on their data, an eval, measured impact and a short case study. Former founders and consultants who coded are explicitly welcomed in postings for this reason.",
+    "Practise out loud. Take a vague prompt, set a 30-minute timer, and talk through clarifying questions, an issue tree, a design, risks and a first milestone. Record yourself. The code below gives you practice prompts."
+   ],
+   "keyIdeas": [
+    "Interviews test technical depth, deployment thinking and communication",
+    "The decomposition case rewards clarifying questions and thinking out loud",
+    "Prepare 5-6 STAR stories with measurable results",
+    "A portfolio of end-to-end projects for real users beats credentials"
+   ],
+   "quiz": [
+    {
+     "q": "In a decomposition interview, what should you do first?",
+     "options": [
+      "Start coding immediately",
+      "Ask clarifying questions about the goal, users and constraints",
+      "Name the biggest model",
+      "Talk about your degree"
+     ],
+     "answer": 1,
+     "explain": "Interviewers want to see you scope the problem before solving it."
+    },
+    {
+     "q": "What does the R in STAR stand for, and what should it include?",
+     "options": [
+      "Reason; your motivation",
+      "Result; ideally with measurable impact",
+      "Risk; what could go wrong",
+      "Review; feedback from peers"
+     ],
+     "answer": 1,
+     "explain": "A strong result is concrete and measured."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "practice_case.py",
+    "source": "# Practise decomposition cases. Run again for a new case; answer out loud in 30 minutes.\nimport random\n\ncustomers = [\"a regional hospital\", \"a global shipping company\", \"a mid-size law firm\",\n             \"a city government\", \"an online retailer\", \"a bank's fraud team\"]\ngoals = [\"cut the time staff spend answering internal policy questions\",\n         \"reduce errors when entering data from scanned forms\",\n         \"help agents resolve customer tickets faster\",\n         \"find risky clauses in thousands of contracts\",\n         \"forecast demand so warehouses stop running out of stock\"]\ntwists = [\"data must never leave the country\", \"the source system is a 20-year-old mainframe\",\n          \"the sponsor wants results in 4 weeks\", \"staff distrust automation after a failed project\",\n          \"half the documents are handwritten\", \"budget is under $5k per month to run\"]\n\ncase = (random.choice(customers), random.choice(goals), random.choice(twists))\nprint(f\"CASE: {case[0].capitalize()} wants to {case[1]}.\")\nprint(f\"TWIST: {case[2].capitalize()}.\\n\")\nsteps = [\n    (\"5 min\",  \"Clarifying questions: users, volume, success metric, constraints, data access\"),\n    (\"5 min\",  \"Issue tree: break the goal into stages; mark where software or AI helps\"),\n    (\"10 min\", \"Design: data flow, approach (prompt/RAG/tools/workflow), integration, security\"),\n    (\"5 min\",  \"Evals and rollout: golden set, metrics, shadow mode, pilot\"),\n    (\"5 min\",  \"Risks, first 2-week milestone and what you'd NOT build yet\"),\n]\nfor t, s in steps:\n    print(f\"[{t:>6}] {s}\")\n",
+    "runnable": true,
+    "note": "Run it several times. Each run gives a new mix of customer, goal and constraint."
+   }
+  },
+  {
+   "slug": "capstone-engagement",
+   "title": "Capstone: run a full engagement",
+   "summary": "Put the whole track together on one realistic customer project, then build your own.",
+   "resources": [
+    {
+     "title": "Anthropic: Building effective agents",
+     "url": "https://www.anthropic.com/engineering/building-effective-agents",
+     "type": "article",
+     "minutes": 20
+    },
+    {
+     "title": "Hamel Husain: Your AI product needs evals",
+     "url": "https://hamel.dev/blog/posts/evals/",
+     "type": "article",
+     "minutes": 25
+    },
+    {
+     "title": "The Forward Deployed Engineer Playbook (DEV Community)",
+     "url": "https://dev.to/truongpx396/the-forward-deployed-engineer-playbook-23d9",
+     "type": "article",
+     "minutes": 20
+    }
+   ],
+   "minutes": 40,
+   "body": [
+    "This capstone runs one complete, simulated engagement in code, using a skill from every course: discovery data, a baseline, a prototype with a (fake) model, an eval with segments, an ROI estimate, a go/no-go check and a status update. Read the code top to bottom; each block is labelled with the lesson it comes from.",
+    "The scenario: **Northwind Insurance** receives thousands of emails a month to a shared claims inbox. Staff read each one and route it to one of four teams. Discovery found it takes about 4 minutes per email, 6,000 emails a month, with 12% misrouted, and misrouted urgent claims are the costliest mistake.",
+    "After running it, do the real capstone yourself. **Find a real user** with a repetitive, text-heavy task: a small business, a nonprofit, a teacher, a friend's team. Then work through the track: run discovery interviews (course 1), write a one-page scope with a baseline and success metric, get and clean their data (course 2), prototype with a real model API, build a golden set with them and evaluate per segment, add guardrails, roll out in shadow mode and then for real (course 3), measure adoption and write the handoff runbook (course 4).",
+    "Deliverables for your portfolio: discovery notes, the scope, a design doc with alternatives considered, the code repository, the eval report, a weekly update, a short demo video and a one-page **case study** with the measured result. That package demonstrates exactly what FDE job postings ask for.",
+    "When you can do this end to end for a real customer, calmly handle the surprises along the way, and explain every decision, you are doing the job of a Forward Deployed Engineer."
+   ],
+   "keyIdeas": [
+    "An engagement links discovery, scope, build, eval, rollout and adoption",
+    "Every decision is backed by a baseline, an eval or a measured result",
+    "Do the real capstone with a real user and real data",
+    "Package it as a case study: that is your FDE portfolio"
+   ],
+   "quiz": [
+    {
+     "q": "Which item best proves FDE readiness in a portfolio?",
+     "options": [
+      "A certificate of completion",
+      "An end-to-end project for a real user with a measured result",
+      "A list of frameworks you know",
+      "A model you trained on public data"
+     ],
+     "answer": 1,
+     "explain": "Postings ask for evidence of owning a real customer outcome."
+    },
+    {
+     "q": "In the capstone, why is 'urgent' treated as a critical segment?",
+     "options": [
+      "It's the largest category",
+      "Misrouting urgent claims is the costliest mistake found in discovery",
+      "The model likes it",
+      "It's alphabetically first"
+     ],
+     "answer": 1,
+     "explain": "Discovery determines which errors matter most, and the eval gate follows from that."
+    },
+    {
+     "q": "What's the right order for an engagement?",
+     "options": [
+      "Build, then ask what the problem is",
+      "Discovery and baseline, prototype, eval, rollout, adoption and handoff",
+      "Rollout, then eval",
+      "Fine-tune first, then discovery"
+     ],
+     "answer": 1,
+     "explain": "Each phase depends on the one before it."
+    }
+   ],
+   "code": {
+    "lang": "python",
+    "title": "capstone.py",
+    "source": "# CAPSTONE: route emails in Northwind Insurance's shared claims inbox.\nimport json, random\nfrom collections import defaultdict\nrandom.seed(42)\n\n# ---- Course 1: discovery and baseline ----------------------------------------\nvolume, minutes_now, misroute_now, hourly_cost = 6000, 4.0, 0.12, 45\nTEAMS = [\"new_claim\", \"urgent\", \"billing\", \"general\"]\n\n# ---- Course 2: real (here: simulated) data, cleaned --------------------------\ntemplates = {\n    \"new_claim\": [\"I want to file a claim for my car accident\", \"Submitting a new claim, photos attached\"],\n    \"urgent\":    [\"URGENT my house is flooding, need help now\", \"Emergency: pipe burst, water everywhere\"],\n    \"billing\":   [\"Why was I charged twice this month?\", \"Question about my premium invoice\"],\n    \"general\":   [\"What are your office hours?\", \"How do I update my address?\"],\n}\nemails = [(random.choice(v).strip(), team) for team, v in templates.items() for _ in range(25)]\n\n# ---- Course 3: prototype with a model behind one function --------------------\ndef call_model(text):\n    t = text.lower()\n    if any(w in t for w in (\"urgent\", \"emergency\", \"flooding\")): label = \"urgent\"\n    elif any(w in t for w in (\"charged\", \"invoice\", \"premium\")): label = \"billing\"\n    elif \"claim\" in t: label = \"new_claim\"\n    else: label = \"general\"\n    if random.random() < 0.06:                       # the model is imperfect\n        label = random.choice(TEAMS)\n    return json.dumps({\"team\": label})\n\ndef route(text):\n    try:\n        team = json.loads(call_model(text))[\"team\"]\n        return team if team in TEAMS else \"general\"\n    except (ValueError, KeyError):\n        return \"general\"\n\n# ---- Course 3: eval per segment ----------------------------------------------\nseg = defaultdict(lambda: [0, 0])\nfor text, truth in emails:\n    seg[truth][1] += 1\n    seg[truth][0] += route(text) == truth\noverall = sum(c for c, n in seg.values()) / len(emails)\nprint(\"EVAL (100 labelled emails)\")\nfor k in TEAMS:\n    c, n = seg[k]\n    print(f\"  {k:<10} {c / n:5.0%}\")\nprint(f\"  overall    {overall:5.0%}  (baseline human misroute rate {misroute_now:.0%})\")\n\n# ---- Course 1: ROI -----------------------------------------------------------\nminutes_after = 0.5   # staff only glance at the suggested route\nsaved = (minutes_now - minutes_after) * volume / 60 * hourly_cost\nrun_cost = volume * 0.002 + 400   # model calls + hosting and monitoring\nprint(f\"\\nROI: ~${saved:,.0f}/month saved vs ~${run_cost:,.0f}/month to run\")\n\n# ---- Course 3: go/no-go ------------------------------------------------------\nurgent_acc = seg[\"urgent\"][0] / seg[\"urgent\"][1]\nchecks = {\"overall beats human baseline\": overall >= 1 - misroute_now,\n          \"urgent accuracy >= 95%\": urgent_acc >= 0.95,\n          \"positive ROI\": saved > run_cost}\nprint(\"\\nGO/NO-GO for shadow -> pilot\")\nfor name, ok in checks.items():\n    print(f\"  [{'x' if ok else ' '}] {name}\")\ngo = all(checks.values())\n\n# ---- Course 4: status update -------------------------------------------------\nprint(\"\\nSTATUS:\", \"GREEN, pilot starts Monday with 5 staff.\" if go else\n      \"AMBER, urgent routing below target; adding urgent keywords to the eval set and \"\n      \"keeping humans on all urgent-looking emails. Decision needed: pilot with that safeguard?\")\n",
+    "runnable": true,
+    "note": "Try changing the model's error rate (0.06) or the urgent threshold and see how the go/no-go and status change."
+   }
+  }
+ ]
+}
